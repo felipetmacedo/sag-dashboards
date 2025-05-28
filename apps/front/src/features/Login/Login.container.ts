@@ -5,9 +5,8 @@ import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { yupResolver } from "@hookform/resolvers/yup";
 
-import { login } from "@/processes/auth";
 import { loginSchema } from "@/schemas/auth";
-import { saveSession } from "@/utils/storage";
+import { useTokenStore } from "@/stores/token.store";
 
 type LoginFormData = yup.InferType<typeof loginSchema>;
 
@@ -15,6 +14,7 @@ export default function LoginContainer() {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const { setToken } = useTokenStore();
 
   const { register, handleSubmit, formState: { errors } } = useForm<LoginFormData>({
     resolver: yupResolver(loginSchema)
@@ -24,14 +24,12 @@ export default function LoginContainer() {
     try {
       setIsLoading(true);
 
-      const response = await login(data);
-
-      saveSession({ token: response.token });
+      setToken(data.token);
 
       navigate("/dashboard");
       toast.success("Login realizado com sucesso!");
     } catch {
-      toast.error("Email ou senha inválidos!");
+      toast.error("Token inválido!");
     } finally {
       setIsLoading(false);
     }

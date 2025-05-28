@@ -7,8 +7,7 @@ import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { logout } from "@/utils/storage";
 import { useUserStore } from "@/stores/user.store";
-import ApolloMonogram from "@/assets/img/monogram-apollo.png";
-import ApolloLogo from "@/assets/img/logo-apollo.png";
+import SagLogo from "@/assets/img/logo-sag.png";
 import { motion } from "framer-motion";
 
 // Define a common interface for all navigation links
@@ -182,9 +181,9 @@ export default function SideBar({ children }: { children: React.ReactNode }) {
 export const Logo = () => (
     <Link to="#" className="flex items-center justify-start h-full">
         <img
-            src={ApolloLogo}
+            src={SagLogo}
             alt="logo"
-            className="h-6 object-contain"
+            className="h-10 object-contain"
         />
     </Link>
 );
@@ -192,9 +191,9 @@ export const Logo = () => (
 export const LogoIcon = () => (
     <div className="flex items-center justify-center h-full">
         <img
-            src={ApolloMonogram}
+            src={SagLogo}
             alt="logo"
-            className="h-8 w-8 object-contain"
+            className="h-10 w-10 object-contain"
         />
     </div>
 );

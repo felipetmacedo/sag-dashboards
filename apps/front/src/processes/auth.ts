@@ -1,21 +1,7 @@
 import api from '@/api'
 
 interface LoginCredentials {
-  email: string
-  password: string
-}
-
-interface SignupCredentials extends LoginCredentials {
-  name: string
-  document_number: string
-  phone_number: string
-  token?: string
-}
-
-interface User {
-  id: string
-  email: string
-  name: string
+  token: string
 }
 
 interface AuthResponse {

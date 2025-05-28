@@ -11,7 +11,7 @@ export function Footer() {
           <div className="space-y-4">
             <div className="flex items-center gap-2">
               <Link to="/" className="flex items-center gap-2">
-                <img src="/logo-apollo.png" alt="Apollo" className="h-8 w-auto" />
+                <img src="/logo-sag.png" alt="SAG" className="h-8 w-auto" />
               </Link>
             </div>
             <p className="text-sm text-gray-600 max-w-xs">
