@@ -2,13 +2,13 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Sidebar, SidebarBody, SidebarLink } from "@/components/ui/sidebar";
-import { UserCog, LogOut, LayoutDashboard, Users, UsersRound, Link as LinkIcon, Search, List, ShieldCheck } from "lucide-react";
+import { LogOut, LayoutDashboard } from "lucide-react";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { logout } from "@/utils/storage";
-import { useUserStore } from "@/stores/user.store";
 import SagLogo from "@/assets/img/logo-sag.png";
 import { motion } from "framer-motion";
+import { useTokenStore } from "@/stores/token.store";
 
 // Define a common interface for all navigation links
 interface NavLink {
@@ -19,73 +19,15 @@ interface NavLink {
 }
 
 export default function SideBar({ children }: { children: React.ReactNode }) {
-    const { userInfo, clearUserInfo } = useUserStore();
     const navigate = useNavigate();
     const [open, setOpen] = useState(true);
+    const { clearToken } = useTokenStore();
 
     const handleLogout = async () => {
-        logout()
-
-        clearUserInfo();
+        clearToken();
         navigate("/login");
         toast.success("Deslogado com sucesso!")
     };
-
-    // Generate dynamic links based on permissions
-    const getPermissionLinks = () => {
-        const permissionLinks: NavLink[] = [];
-
-        if (userInfo?.permissions) {
-
-            // Check for READ TEAMS permission
-            if (userInfo.permissions.some(perm => perm.name === 'READ' && perm.module === 'TEAMS')) {
-                permissionLinks.push({
-                    label: "Líderes",
-                    href: "/teams",
-                    icon: <UsersRound className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />,
-                });
-            }
-
-            if (userInfo.permissions.some(perm => perm.name === 'READ' && perm.module === 'LISTS')) {
-                permissionLinks.push({
-                    label: "Listas",
-                    href: "/lists",  
-                    icon: <List className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />,
-                });
-            }
-
-            if (userInfo.permissions.some(perm => perm.name === 'READ' && perm.module === 'USERS')) {
-                permissionLinks.push({
-                    label: "Usuários",
-                    href: "/users",
-                    icon: <Users className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />,
-                },{
-                    label: "Indicações",
-                    href: "/invitation",
-                    icon: <LinkIcon className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />,
-                });
-            }
-
-            // Check for READ REQUESTS permission
-            if (userInfo.permissions.some(perm => perm.name === 'READ' && perm.module === 'REQUESTS')) {
-                permissionLinks.push({
-                    label: "Limpa Nome",
-                    href: "/requests",
-                    icon: <ShieldCheck className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />,
-                }, {
-                    label: "Consultas",
-                    href: "/consultas",
-                    icon: <Search className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />,
-                }, {
-                    label: "Indicações",
-                    href: "/invitation",
-                    icon: <LinkIcon className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />,
-                });
-            }
-		}
-
-		return permissionLinks;
-	};
 
 	// Combine standard links with permission-based links
     const standardLinks: NavLink[] = [
@@ -93,14 +35,6 @@ export default function SideBar({ children }: { children: React.ReactNode }) {
             label: "Dashboard",
             href: "/dashboard",
             icon: <LayoutDashboard className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />,
-        },
-    ];
-    
-    const profileAndLogoutLinks: NavLink[] = [
-        {
-            label: "Perfil",
-            href: "/profile",
-            icon: <UserCog className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />,
         },
         {
 			label: 'Logout',
@@ -110,8 +44,9 @@ export default function SideBar({ children }: { children: React.ReactNode }) {
         },
     ];
     
+    
     // Combine all links
-    const links = [...standardLinks, ...getPermissionLinks(), ...profileAndLogoutLinks];
+    const links = [...standardLinks];
 
     return (
         <div className={cn("flex flex-col md:flex-row dark:bg-neutral-800 w-full flex-1 mx-auto border border-neutral-200 dark:border-neutral-700 overflow-hidden", "h-screen w-screen")}>
@@ -157,19 +92,6 @@ export default function SideBar({ children }: { children: React.ReactNode }) {
                             return <SidebarLink key={idx} link={linkWithoutAction} />;
                         })}
                         </div>
-                    </div>
-                    <div className={cn("flex items-center transition-all duration-300", open ? "justify-start gap-2 text-ellipsis overflow-hidden" : "justify-center w-full")}>
-                        <SidebarLink
-                            link={{
-                                label: open ? userInfo?.name || "" : "",
-                                href: "/profile",
-                                icon: (
-                                    <span className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0 ml-2 mb-1">
-                                        {userInfo?.name?.charAt(0)}
-                                    </span>
-                                ),
-                            }}
-                        />
                     </div>
                 </SidebarBody>
             </Sidebar>
