@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  front:
+    build:
+      context: ./apps/front
+      target: builder
+    env_file: ./apps/front/.env.production
+    networks:
+      - apollocrm
+    expose:
+      - "5173"
+
+  caddy:
+    build:
+      context: ./apps/caddy
+      dockerfile: Dockerfile
+    environment:
+      - DOMAIN_NAME=apollo.com.br
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - apollocrm
+    depends_on:
+      - front
+
+volumes:
+  caddy_data:
+  caddy_config:
+
+networks:
+  apollocrm:
+    driver: bridge

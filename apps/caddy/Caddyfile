@@ -1,0 +1,18 @@
+# Web application
+app.apollocrm.com.br {
+    encode gzip
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        Referrer-Policy "strict-origin-when-cross-origin"
+    }
+    rate_limit {
+        zones {
+            default {
+                rate 200r/m
+            }
+        }
+    }
+    reverse_proxy front:5173
+}
