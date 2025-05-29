@@ -25,7 +25,9 @@ export default function DashboardPage() {
 		loading,
 		productPie,
 		tipoPropostaPie,
-		comparativeData,
+		propostasLastTwoYearsChart,
+		errorCurrent,
+		errorLastTwoYears,
 	} = useDashboardContainer();
 
 	// Color palette for charts
@@ -72,8 +74,33 @@ export default function DashboardPage() {
 				</div>
 			</div>
 			{loading ? (
-				<div className="text-center py-10 text-lg text-gray-500 animate-pulse">
-					Carregando dados...
+				<div className="space-y-8">
+					{/* Skeleton loading for top row */}
+					<div className="grid grid-cols-2 gap-8">
+						{/* Skeleton for first chart */}
+						<div className="bg-white rounded-sm shadow-xl p-6 border-t-4 border-pink-400 w-full flex flex-row">
+							<div className="h-64 bg-gray-100 rounded-full w-64 mx-auto animate-pulse"></div>
+							<div className="h-6 bg-gray-200 rounded w-1/3 mx-auto mb-4 animate-pulse"></div>
+						</div>
+						{/* Skeleton for second chart */}
+						<div className="bg-white rounded-sm shadow-xl p-6 border-t-4 border-blue-400 w-full flex flex-row">
+							<div className="h-64 bg-gray-100 rounded-full w-64 mx-auto animate-pulse"></div>
+							<div className="h-6 bg-gray-200 rounded w-1/3 mx-auto mb-4 animate-pulse"></div>
+						</div>
+					</div>
+
+					{/* Skeleton loading for bottom chart */}
+					<div className="bg-white rounded-sm shadow-xl p-6 border-t-4 border-purple-400">
+						<div className="h-6 bg-gray-200 rounded w-1/3 mb-4 animate-pulse"></div>
+						<div className="h-80 bg-gray-100 rounded animate-pulse"></div>
+					</div>
+
+					{/* Error message if needed */}
+					{errorCurrent || errorLastTwoYears ? (
+						<div className="text-center text-red-500 mt-2 p-3 bg-red-50 border border-red-200 rounded">
+							Erro ao carregar dados. Por favor, tente novamente.
+						</div>
+					) : null}
 				</div>
 			) : (
 				<div className="space-y-8">
@@ -99,7 +126,13 @@ export default function DashboardPage() {
 											}
 										>
 											{tipoPropostaPie.map(
-												(entry: any, idx: number) => (
+												(
+													entry: {
+														tipo: string;
+														value: number;
+													},
+													idx: number
+												) => (
 													<Cell
 														key={`tipo-cell-${idx}`}
 														fill={
@@ -115,8 +148,7 @@ export default function DashboardPage() {
 										<Tooltip
 											formatter={(
 												value: number,
-												name: string,
-												props: any
+												name: string
 											) => [`${value} propostas`, name]}
 										/>
 										<Legend
@@ -210,7 +242,7 @@ export default function DashboardPage() {
 						</h2>
 						<ResponsiveContainer width="100%" height={340}>
 							<BarChart
-								data={comparativeData}
+								data={propostasLastTwoYearsChart}
 								margin={{
 									top: 20,
 									right: 30,
@@ -240,7 +272,9 @@ export default function DashboardPage() {
 								/>
 								<Legend />
 								{/* Stacked bars for each year, using distinct colors and a slight shadow for 3D effect */}
-								{Object.keys(comparativeData[0] || {})
+								{Object.keys(
+									propostasLastTwoYearsChart[0] || {}
+								)
 									.filter((key) => key !== 'month')
 									.map((year, idx) => (
 										<Bar
@@ -257,7 +291,6 @@ export default function DashboardPage() {
 													'#4bc0c0',
 												][idx % 5]
 											}
-											radius={[3, 3, 0, 0]}
 											barSize={24}
 											style={{
 												filter: 'drop-shadow(1px 2px 2px rgba(80,80,80,0.10))',

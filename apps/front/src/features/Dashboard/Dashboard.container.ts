@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { fetchPropostas } from '@/processes/propostas';
-import { usePropostasStore } from '@/stores/propostas.store';
+import type { Proposta } from '@/stores/propostas.store';
 
 export default function useDashboardContainer() {
 	const [startDate, setStartDate] = useState(() => {
@@ -12,9 +12,14 @@ export default function useDashboardContainer() {
 		const now = new Date();
 		return new Date(now.getFullYear(), now.getMonth() + 1, 0);
 	});
-	const propostas = usePropostasStore(state => state.propostas);
 
-	const { isLoading: loadingCurrent, refetch: refetchCurrent } = useQuery({
+	const {
+		data: propostasRaw,
+		isLoading: loadingCurrent,
+		refetch: refetchCurrent,
+		error: errorCurrent,
+		isError: isErrorCurrent,
+	} = useQuery({
 		queryKey: [
 			'propostas',
 			startDate.toISOString().slice(0, 10),
@@ -28,51 +33,37 @@ export default function useDashboardContainer() {
 		refetchOnWindowFocus: false,
 	});
 
-	// Query for comparative data for last 5 years
+	// Ensure propostas is always an array
+	const propostas = useMemo(() => Array.isArray(propostasRaw) ? propostasRaw : [], [propostasRaw]);
+
 	const {
-		data: comparativeData = [],
-		isLoading: loadingComparative,
-		refetch: refetchComparative,
+		data: propostasLastTwoYearsRaw,
+		isLoading: loadingLastTwoYears,
+		refetch: refetchLastTwoYears,
+		error: errorLastTwoYears,
+		isError: isErrorLastTwoYears,
 	} = useQuery({
-		queryKey: ['propostas-comparative-5y'],
-		queryFn: async () => {
-			const now = new Date();
-			const results = [];
-			for (let month = 1; month <= 12; month++) {
-				const monthStr = String(month).padStart(2, '0');
-				const data = {};
-				for (let i = 0; i < 2; i++) {
-					const year = now.getFullYear() - i;
-					const dtInicio = `${year}-${monthStr}-01`;
-					const dtFinal = `${year}-${monthStr}-31`;
-					// Use the store's selector after proposals are set
-					const { salesPerDay } = usePropostasStore.getState();
-					const sales = salesPerDay(dtInicio, dtFinal).current.reduce(
-						(acc: number, d: { qtd: number }) => acc + d.qtd,
-						0
-					);
-					data[year] = sales;
-				}
-				results.push({ month: monthStr, ...data });
-			}
-			return results;
-		},
+		queryKey: ['propostasLastTwoYears'],
+		queryFn: () => fetchPropostas({
+			DT_INICIO: (() => { const d = new Date(); d.setFullYear(d.getFullYear() - 2); return d.toISOString().slice(0, 10); })(),
+			DT_FINAL: new Date().toISOString().slice(0, 10),
+		}),
 		refetchOnWindowFocus: false,
 	});
 
-	// Get selectors from the store
-	const { salesPerDay, salesPerCity } = usePropostasStore();
+	// Ensure propostasLastTwoYears is always an array
+	const propostasLastTwoYears = useMemo(() => Array.isArray(propostasLastTwoYearsRaw) ? propostasLastTwoYearsRaw : [], [propostasLastTwoYearsRaw]);
 
 	// Selector for Tipo de Proposta (NOVA vs REPOSICAO)
 	const tipoPropostaPie = useMemo(() => {
 		const start = startDate.toISOString().slice(0, 10);
 		const end = endDate.toISOString().slice(0, 10);
 		const filtered = propostas.filter(
-			(p) => p.DT_BORDERO >= start && p.DT_BORDERO <= end
+			(p: Proposta) => p.DT_BORDERO >= start && p.DT_BORDERO <= end
 		);
 		const total = filtered.length;
 		const counts = filtered.reduce(
-			(acc, p) => {
+			(acc: Record<'NOVA' | 'REPOSICAO', number>, p: Proposta) => {
 				let tipo: 'NOVA' | 'REPOSICAO' = 'REPOSICAO';
 				if (p.INDICADO_NOVO_REP === 'N') tipo = 'NOVA';
 				else if (p.INDICADO_NOVO_REP === 'R') tipo = 'REPOSICAO';
@@ -100,10 +91,10 @@ export default function useDashboardContainer() {
 		const start = startDate.toISOString().slice(0, 10);
 		const end = endDate.toISOString().slice(0, 10);
 		const filtered = propostas.filter(
-			(p) => p.DT_BORDERO >= start && p.DT_BORDERO <= end
+			(p: Proposta) => p.DT_BORDERO >= start && p.DT_BORDERO <= end
 		);
 		const grouped: Record<string, number> = {};
-		filtered.forEach((p) => {
+		filtered.forEach((p: Proposta) => {
 			const plan = (p.NOME_PLANO || '').trim();
 			if (!plan) return;
 			grouped[plan] = (grouped[plan] || 0) + 1;
@@ -113,35 +104,45 @@ export default function useDashboardContainer() {
 			sales,
 		}));
 	}, [startDate, endDate, propostas]);
-	const cityPie = useMemo(
-		() =>
-			salesPerCity(
-				startDate.toISOString().slice(0, 10),
-				endDate.toISOString().slice(0, 10)
-			),
-		[startDate, endDate, salesPerCity]
-	);
-	const dayChart = useMemo(
-		() =>
-			salesPerDay(
-				startDate.toISOString().slice(0, 10),
-				endDate.toISOString().slice(0, 10)
-			),
-		[startDate, endDate, salesPerDay]
-	);
+
+		// Aggregate last two years by month/year for the bar chart
+	const propostasLastTwoYearsChart = useMemo(() => {
+		if (!Array.isArray(propostasLastTwoYears)) return [];
+		const now = new Date();
+		const currentYear = now.getFullYear();
+		const prevYear = currentYear - 1;
+		// Initialize chart data for all 12 months
+		const chartData = Array.from({ length: 12 }, (_, i) => {
+			const month = String(i + 1).padStart(2, '0');
+			return { month, [prevYear]: 0, [currentYear]: 0 };
+		});
+		propostasLastTwoYears.forEach((p: Proposta) => {
+			const date = new Date(p.DT_BORDERO);
+			if (isNaN(date.getTime())) return;
+			const year = date.getFullYear();
+			const monthIdx = date.getMonth(); // 0-based
+			if ((year === prevYear || year === currentYear) && monthIdx >= 0 && monthIdx < 12) {
+				chartData[monthIdx][year] = (chartData[monthIdx][year] || 0) + 1;
+			}
+		});
+		return chartData;
+	}, [propostasLastTwoYears]);
 
 	return {
 		startDate,
 		setStartDate,
 		endDate,
 		setEndDate,
-		loading: loadingCurrent || loadingComparative,
+		loading: loadingCurrent || loadingLastTwoYears,
 		productPie,
-		cityPie,
-		dayChart,
 		tipoPropostaPie,
-		comparativeData,
+		propostasLastTwoYears,
+		propostasLastTwoYearsChart,
 		refetchCurrent,
-		refetchComparative,
+		refetchLastTwoYears,
+		errorCurrent,
+		errorLastTwoYears,
+		isErrorCurrent,
+		isErrorLastTwoYears,
 	};
 }
