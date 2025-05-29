@@ -5,6 +5,7 @@ import About from "@/features/About";
 import { PublicLayout } from "@/layouts/PublicLayout";
 import Dashboard from "@/features/Dashboard"
 import Ranking from "@/features/Ranking";
+import Vendas from "@/features/Vendas";
 
 export const router = createBrowserRouter([
     {
@@ -31,6 +32,10 @@ export const router = createBrowserRouter([
             {
                 path: "ranking",
                 element: <Ranking />
+            },
+            {
+                path: "vendas",
+                element: <Vendas />
             }
         ]
     }

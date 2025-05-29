@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Sidebar, SidebarBody, SidebarLink} from "@/components/ui/sidebar";
-import { LogOut, LayoutDashboard, BarChart3, FileSpreadsheet } from "lucide-react";
+import { LogOut, LayoutDashboard, BarChart3, FileSpreadsheet, Banknote } from "lucide-react";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import SagLogo from "@/assets/img/logo-sag.png";
@@ -37,6 +37,11 @@ export default function SideBar({ children }: { children: React.ReactNode }) {
             label: "Dashboard",
             href: "/dashboard",
             icon: <LayoutDashboard className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />,
+        },
+        {
+            label: "Análise de Vendas",
+            href: "/vendas",
+            icon: <Banknote className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />,
         },
         {
             label: "Rankings",
