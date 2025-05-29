@@ -206,7 +206,7 @@ export default function DashboardPage() {
 					{/* Bottom row - Full width bar chart */}
 					<div className="bg-white rounded-sm shadow-xl p-6 border-t-4 border-purple-400">
 						<h2 className="text-xl font-bold mb-2 text-purple-600 tracking-tight">
-							Comparativo de Vendas (Últimos 5 anos)
+							Comparativo de Vendas (Últimos 2 anos)
 						</h2>
 						<ResponsiveContainer width="100%" height={340}>
 							<BarChart

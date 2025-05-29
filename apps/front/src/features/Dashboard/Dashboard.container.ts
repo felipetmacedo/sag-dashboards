@@ -12,6 +12,7 @@ export default function useDashboardContainer() {
 		const now = new Date();
 		return new Date(now.getFullYear(), now.getMonth() + 1, 0);
 	});
+	const propostas = usePropostasStore(state => state.propostas);
 
 	const { isLoading: loadingCurrent, refetch: refetchCurrent } = useQuery({
 		queryKey: [
@@ -40,7 +41,7 @@ export default function useDashboardContainer() {
 			for (let month = 1; month <= 12; month++) {
 				const monthStr = String(month).padStart(2, '0');
 				const data = {};
-				for (let i = 0; i < 5; i++) {
+				for (let i = 0; i < 2; i++) {
 					const year = now.getFullYear() - i;
 					const dtInicio = `${year}-${monthStr}-01`;
 					const dtFinal = `${year}-${monthStr}-31`;
@@ -66,7 +67,6 @@ export default function useDashboardContainer() {
 	const tipoPropostaPie = useMemo(() => {
 		const start = startDate.toISOString().slice(0, 10);
 		const end = endDate.toISOString().slice(0, 10);
-		const propostas = usePropostasStore.getState().propostas;
 		const filtered = propostas.filter(
 			(p) => p.DT_BORDERO >= start && p.DT_BORDERO <= end
 		);
@@ -93,13 +93,12 @@ export default function useDashboardContainer() {
 				perc: total ? Math.round((counts.REPOSICAO / total) * 100) : 0,
 			},
 		];
-	}, [startDate, endDate, usePropostasStore.getState().propostas]);
+	}, [startDate, endDate, propostas]);
 
 	// Memoized chart data
 	const productPie = useMemo(() => {
 		const start = startDate.toISOString().slice(0, 10);
 		const end = endDate.toISOString().slice(0, 10);
-		const propostas = usePropostasStore.getState().propostas;
 		const filtered = propostas.filter(
 			(p) => p.DT_BORDERO >= start && p.DT_BORDERO <= end
 		);
@@ -113,7 +112,7 @@ export default function useDashboardContainer() {
 			name,
 			sales,
 		}));
-	}, [startDate, endDate, usePropostasStore.getState().propostas]);
+	}, [startDate, endDate, propostas]);
 	const cityPie = useMemo(
 		() =>
 			salesPerCity(

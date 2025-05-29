@@ -172,9 +172,21 @@ export interface Proposta {
 interface PropostasState {
 	propostas: Proposta[];
 	setPropostas: (propostas: Proposta[]) => void;
-  salesPerDay: (start: string, end: string) => { current: { data: string; qtd: number; acumulado: number }[]; previous: { data: string; qtd: number; acumulado: number }[] };
-  salesPerCity: (start: string, end: string) => { city: string; qtd: number; perc: string }[];
-  salesPerModel: (start: string, end: string) => { model: string; qtd: number; perc: string }[];
+	salesPerDay: (
+		start: string,
+		end: string
+	) => {
+		current: { data: string; qtd: number; acumulado: number }[];
+		previous: { data: string; qtd: number; acumulado: number }[];
+	};
+	salesPerCity: (
+		start: string,
+		end: string
+	) => { city: string; qtd: number; perc: string }[];
+	salesPerModel: (
+		start: string,
+		end: string
+	) => { model: string; qtd: number; perc: string }[];
 }
 
 import _ from 'lodash';
@@ -182,8 +194,6 @@ import _ from 'lodash';
 export const usePropostasStore = create<PropostasState>((set, get) => ({
 	propostas: [],
 	setPropostas: (propostas) => set({ propostas }),
-
-	// 1. Sales per day in selected range, with daily and accumulated sales, and previous month comparison
 	salesPerDay: (start: string, end: string) => {
 		const propostas = get().propostas;
 		// Filter for selected range
