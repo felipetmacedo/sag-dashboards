@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { fetchPropostas } from '@/processes/propostas';
-import type { Proposta } from '@/stores/propostas.store';
+import type { Proposta } from '@/types/proposta';
 
 export default function useDashboardContainer() {
 	const [startDate, setStartDate] = useState(() => {

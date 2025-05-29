@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { fetchPropostas } from '@/processes/propostas';
-import type { Proposta } from '@/stores/propostas.store';
+import type { Proposta } from '@/types/proposta';
 import { startOfMonth, endOfMonth } from 'date-fns';
 
 export type RankingType = 'vendor' | 'model' | 'city';
