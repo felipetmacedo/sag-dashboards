@@ -17,6 +17,7 @@ import {
 	SelectValue,
 } from '@/components/ui/select';
 import { DatePicker } from '@/components/ui/date-picker';
+import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 
@@ -35,12 +36,18 @@ export default function Ranking() {
 		rankingTypeLabels,
 		exportData,
 		exportHeaders,
+		isLoading,
+		isError,
 	} = useRanking();
 
 	// Format percentage for display
 	const formatPercent = (value: number) => {
 		return `${value.toFixed(2)}%`;
 	};
+
+	// Date state as ISO strings for DatePicker compatibility
+	const startDateString = startDate ? startDate.toISOString() : null;
+	const endDateString = endDate ? endDate.toISOString() : null;
 
 	// Format currency for display
 	const formatCurrency = (value: number) => {
@@ -119,9 +126,11 @@ export default function Ranking() {
 								Data Inicial
 							</label>
 							<DatePicker
-								date={startDate}
-								setDate={setStartDate}
-								className="w-full"
+								value={startDateString}
+								onChange={(date) => {
+									if (date) setStartDate(new Date(date));
+								}}
+								placeholder="Data inicial"
 							/>
 						</div>
 
@@ -130,32 +139,62 @@ export default function Ranking() {
 								Data Final
 							</label>
 							<DatePicker
-								date={endDate}
-								setDate={setEndDate}
-								className="w-full"
+								value={endDateString}
+								onChange={(date) => {
+									if (date) setEndDate(new Date(date));
+								}}
+								placeholder="Data final"
 							/>
 						</div>
 					</div>
 				</CardContent>
 			</Card>
 
-			<Card>
-				<CardHeader className="pb-3">
-					<CardTitle>
-						Ranking por {rankingTypeLabels[rankingType]} -{' '}
-						{format(startDate, 'dd/MM/yyyy')} até{' '}
-						{format(endDate, 'dd/MM/yyyy')}
-					</CardTitle>
-				</CardHeader>
-				<CardContent>
-					{data.length === 0 ? (
-						<div className="text-center py-8">
-							<p className="text-gray-500">
-								Nenhum dado encontrado para o período
-								selecionado.
-							</p>
+			{isLoading ? (
+				<Card>
+					<CardHeader className="pb-3">
+						<CardTitle>
+							<Skeleton className="h-6 w-3/4" />
+						</CardTitle>
+					</CardHeader>
+					<CardContent>
+						<div className="space-y-2">
+							<Skeleton className="h-10 w-full" />
+							<Skeleton className="h-10 w-full" />
+							<Skeleton className="h-10 w-full" />
+							<Skeleton className="h-10 w-full" />
+							<Skeleton className="h-10 w-full" />
+							<Skeleton className="h-10 w-full" />
+							<Skeleton className="h-10 w-full" />
 						</div>
-					) : (
+					</CardContent>
+				</Card>
+			) : isError ? (
+				<Card>
+					<CardContent>
+						<div className="text-center text-red-500 mt-2 p-3 bg-red-50 border border-red-200 rounded">
+							Erro ao carregar dados. Por favor, tente novamente.
+						</div>
+					</CardContent>
+				</Card>
+			) : (
+				<Card>
+					<CardHeader className="pb-3">
+						<CardTitle>
+							Ranking por {rankingTypeLabels[rankingType]} -{' '}
+							{format(startDate, 'dd/MM/yyyy')} até{' '}
+							{format(endDate, 'dd/MM/yyyy')}
+						</CardTitle>
+					</CardHeader>
+					<CardContent>
+						{data.length === 0 ? (
+							<div className="text-center py-8">
+								<p className="text-gray-500">
+									Nenhum dado encontrado para o período
+									selecionado.
+								</p>
+							</div>
+						) : (
 						<div className="overflow-x-auto">
 							<Table>
 								<TableHeader>
@@ -234,8 +273,9 @@ export default function Ranking() {
 							</Table>
 						</div>
 					)}
-				</CardContent>
-			</Card>
+					</CardContent>
+				</Card>
+			)}
 		</div>
 	);
 }

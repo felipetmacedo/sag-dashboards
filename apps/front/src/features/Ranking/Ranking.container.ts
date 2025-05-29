@@ -1,5 +1,7 @@
 import { useMemo, useState } from 'react';
-import { usePropostasStore, Proposta } from '@/stores/propostas.store';
+import { useQuery } from '@tanstack/react-query';
+import { fetchPropostas } from '@/processes/propostas';
+import type { Proposta } from '@/stores/propostas.store';
 import { startOfMonth, endOfMonth } from 'date-fns';
 
 export type RankingType = 'vendor' | 'model' | 'city';
@@ -78,7 +80,28 @@ export default function useRanking() {
 	// Selected item for detailed view
 	const [selectedItem, setSelectedItem] = useState<string | null>(null);
 
-	const propostas = usePropostasStore((state) => state.propostas);
+	const {
+		data: propostasRaw,
+		isLoading,
+		refetch,
+		error,
+		isError,
+	} = useQuery({
+		queryKey: [
+			'ranking-propostas',
+			startDate.toISOString().slice(0, 10),
+			endDate.toISOString().slice(0, 10),
+		],
+		queryFn: () =>
+			fetchPropostas({
+				DT_INICIO: startDate.toISOString().slice(0, 10),
+				DT_FINAL: endDate.toISOString().slice(0, 10),
+			}),
+		refetchOnWindowFocus: false,
+	});
+
+	// Ensure propostas is always an array
+	const propostas = useMemo(() => Array.isArray(propostasRaw) ? propostasRaw : [], [propostasRaw]);
 
 	const key = keyMap[rankingType];
 	const start = startDate.toISOString().slice(0, 10);
@@ -226,6 +249,10 @@ export default function useRanking() {
 		setSelectedItem,
 		selectedItemData,
 		exportData,
-		exportHeaders
+		exportHeaders,
+		isLoading,
+		refetch,
+		error,
+		isError
 	};
 }

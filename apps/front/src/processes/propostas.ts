@@ -1,5 +1,5 @@
 import { useTokenStore } from '@/stores/token.store';
-import { usePropostasStore } from '@/stores/propostas.store';
+import { toast } from 'sonner';
 import axios from 'axios';
 
 export async function fetchPropostas({
@@ -10,16 +10,24 @@ export async function fetchPropostas({
 	DT_FINAL: string;
 }) {
 	const tokenStore = useTokenStore.getState();
-	const propostaStore = usePropostasStore.getState();
 	const token = tokenStore.token;
-	if (!token) throw new Error('Token não encontrado');
+	if (!token) {
+		toast.error('Token não encontrado');
+		return [];
+	}
 
-	const response = await axios.post('https://n8n.sagzap.com.br/webhook/propostas', {
-		codhda: token,
-		dataInicial: DT_INICIO,
-		dataFinal: DT_FINAL,
-		token: '73f4eaa45b90a00e8834d951074ba042',
-	});
-	propostaStore.setPropostas(response.data.propostas);
+	const response = await axios.post(
+		'https://n8n.sagzap.com.br/webhook/propostas',
+		{
+			codhda: token,
+			dataInicial: DT_INICIO,
+			dataFinal: DT_FINAL,
+			token: '73f4eaa45b90a00e8834d951074ba042',
+		}
+	);
+	if (!response.data.propostas) {
+		toast.error('Erro ao buscar propostas');
+		return [];
+	}
 	return response.data.propostas;
 }
