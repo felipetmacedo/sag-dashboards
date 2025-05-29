@@ -109,11 +109,11 @@ export default function DashboardPage() {
 				<div className="space-y-8">
 					{/* Skeleton loading for summary cards */}
 					<div className="grid grid-cols-2 gap-8 mb-8">
-						<div className="bg-white p-6 rounded-xl shadow-md animate-pulse border-t-4 border-purple-400">
+						<div className="bg-white p-6 rounded-sm shadow-md animate-pulse border-t-4 border-purple-400">
 							<div className="h-6 bg-gray-200 rounded w-1/2 mb-4"></div>
 							<div className="h-8 bg-gray-200 rounded w-1/3"></div>
 						</div>
-						<div className="bg-white p-6 rounded-xl shadow-md animate-pulse border-t-4 border-green-400">
+						<div className="bg-white p-6 rounded-sm shadow-md animate-pulse border-t-4 border-green-400">
 							<div className="h-6 bg-gray-200 rounded w-1/2 mb-4"></div>
 							<div className="h-8 bg-gray-200 rounded w-1/3"></div>
 						</div>
@@ -153,7 +153,7 @@ export default function DashboardPage() {
 				<div className="space-y-8">
 					{/* Top row - 2 column grid for summary cards */}
 					<div className="grid grid-cols-2 gap-8 mb-8">
-						<div className="bg-white p-6 rounded-xl shadow-md border-t-4 border-purple-400">
+						<div className="bg-white p-6 rounded-sm shadow-md border-t-4 border-purple-400">
 							<h2 className="text-lg font-semibold text-gray-700 mb-2">
 								Total de Propostas
 							</h2>
@@ -165,7 +165,7 @@ export default function DashboardPage() {
 								a {format(endDate, 'dd/MM/yyyy')}
 							</p>
 						</div>
-						<div className="bg-white p-6 rounded-xl shadow-md border-t-4 border-green-400">
+						<div className="bg-white p-6 rounded-sm shadow-md border-t-4 border-green-400">
 							<h2 className="text-lg font-semibold text-gray-700 mb-2">
 								Total de Faturamento
 							</h2>
