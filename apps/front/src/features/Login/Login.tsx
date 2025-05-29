@@ -47,7 +47,7 @@ export default function Login() {
 									<Input
 										id="token"
 										type="text"
-										placeholder="Token de autenticação"
+										placeholder="Código de autenticação"
 										{...register('token')}
 										aria-invalid={
 											errors.token ? 'true' : 'false'
