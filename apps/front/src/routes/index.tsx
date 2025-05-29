@@ -4,11 +4,7 @@ import Login from "@/features/Login";
 import About from "@/features/About";
 import { PublicLayout } from "@/layouts/PublicLayout";
 import Dashboard from "@/features/Dashboard"
-import Teams from "@/features/Teams";
-import Users from "@/features/Users";
-import Requests from "@/features/Requests";
-import Lists from "@/features/Lists";
-import ListView from "@/features/ListView";
+import Ranking from "@/features/Ranking";
 
 export const router = createBrowserRouter([
     {
@@ -33,24 +29,8 @@ export const router = createBrowserRouter([
                 element: <Dashboard />
             },
             {
-                path: "teams",
-                element: <Teams />
-            },
-            {
-                path: "users",
-                element: <Users />
-            },
-            {
-                path: "requests",
-                element: <Requests />
-            },
-            {
-                path: "lists",
-                element: <Lists />
-            },
-            {
-                path: "lists/:id",
-                element: <ListView />
+                path: "ranking",
+                element: <Ranking />
             }
         ]
     }

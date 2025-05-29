@@ -2,16 +2,16 @@ import { create } from 'zustand';
 
 export interface Proposta {
 	ID: number;
-	COD_PLANO: string;
-	COD_CONCESS: string;
+	COD_PLANO: string | null;
+	COD_CONCESS: string | null;
 	NUM_PROPOSTA: string;
 	DIG_PROPOSTA: string;
 	ST_SINC_SAG: string;
 	NOME_PLANO: string;
-	NUM_GRUPO: string;
-	NUM_COTA: string;
-	REP_COTA: string;
-	DIG_COTA: string;
+	NUM_GRUPO: string | null;
+	NUM_COTA: string | null;
+	REP_COTA: string | null;
+	DIG_COTA: string | null;
 	NRO_CONTRATO: string;
 	SERIE_CONTRATO: string;
 	DIG_CONTRATO: string;
@@ -188,10 +188,10 @@ export const usePropostasStore = create<PropostasState>((set, get) => ({
 		const propostas = get().propostas;
 		// Filter for selected range
 		const filtered = propostas.filter(
-			(p) => p.DATA_VENDA >= start && p.DATA_VENDA <= end
+			(p) => p.DT_BORDERO >= start && p.DT_BORDERO <= end
 		);
 		// Group by day
-		const grouped = _.groupBy(filtered, 'DATA_VENDA');
+		const grouped = _.groupBy(filtered, 'DT_BORDERO');
 		// Sort days
 		const days = _.sortBy(Object.keys(grouped));
 		let acumulado = 0;
@@ -212,9 +212,9 @@ export const usePropostasStore = create<PropostasState>((set, get) => ({
 			.toISOString()
 			.slice(0, 10);
 		const prevFiltered = propostas.filter(
-			(p) => p.DATA_VENDA >= prevStart && p.DATA_VENDA <= prevEnd
+			(p) => p.DT_BORDERO >= prevStart && p.DT_BORDERO <= prevEnd
 		);
-		const prevGrouped = _.groupBy(prevFiltered, 'DATA_VENDA');
+		const prevGrouped = _.groupBy(prevFiltered, 'DT_BORDERO');
 		const prevDays = _.sortBy(Object.keys(prevGrouped));
 		let prevAcumulado = 0;
 		const prevResult = prevDays.map((day: string) => {
@@ -228,7 +228,7 @@ export const usePropostasStore = create<PropostasState>((set, get) => ({
 	// 2. Sales per city in selected range, with percentage
 	salesPerCity: (start: string, end: string) => {
 		const propostas = get().propostas.filter(
-			(p) => p.DATA_VENDA >= start && p.DATA_VENDA <= end
+			(p) => p.DT_BORDERO >= start && p.DT_BORDERO <= end
 		);
 		const grouped = _.groupBy(propostas, 'CIDADE_LOG');
 		const total = propostas.length;
@@ -244,7 +244,7 @@ export const usePropostasStore = create<PropostasState>((set, get) => ({
 	// 3. Propostas per CODIGOMODELO (model), with name, sales, and percentage
 	salesPerModel: (start: string, end: string) => {
 		const propostas = get().propostas.filter(
-			(p) => p.DATA_VENDA >= start && p.DATA_VENDA <= end
+			(p) => p.DT_BORDERO >= start && p.DT_BORDERO <= end
 		);
 		const grouped = _.groupBy(propostas, 'CODIGOMODELO');
 		const total = propostas.length;

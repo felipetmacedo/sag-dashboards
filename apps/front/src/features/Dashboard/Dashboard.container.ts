@@ -13,11 +13,7 @@ export default function useDashboardContainer() {
 		return new Date(now.getFullYear(), now.getMonth() + 1, 0);
 	});
 
-	// Query for proposals in the selected range
-	const {
-		isLoading: loadingCurrent,
-		refetch: refetchCurrent,
-	} = useQuery({
+	const { isLoading: loadingCurrent, refetch: refetchCurrent } = useQuery({
 		queryKey: [
 			'propostas',
 			startDate.toISOString().slice(0, 10),
@@ -41,32 +37,39 @@ export default function useDashboardContainer() {
 		queryFn: async () => {
 			const now = new Date();
 			const results = [];
-			for (let i = 0; i < 5; i++) {
-				const year = now.getFullYear() - i;
-				const dtInicio = `${year}-01-01`;
-				const dtFinal = `${year}-12-31`;
-				// Use the store's selector after proposals are set
-				const { salesPerDay } = usePropostasStore.getState();
-				const sales = salesPerDay(dtInicio, dtFinal).current.reduce(
-					(acc: number, d: any) => acc + d.qtd,
-					0
-				);
-				results.push({ year, sales });
+			for (let month = 1; month <= 12; month++) {
+				const monthStr = String(month).padStart(2, '0');
+				const data = {};
+				for (let i = 0; i < 5; i++) {
+					const year = now.getFullYear() - i;
+					const dtInicio = `${year}-${monthStr}-01`;
+					const dtFinal = `${year}-${monthStr}-31`;
+					// Use the store's selector after proposals are set
+					const { salesPerDay } = usePropostasStore.getState();
+					const sales = salesPerDay(dtInicio, dtFinal).current.reduce(
+						(acc: number, d: { qtd: number }) => acc + d.qtd,
+						0
+					);
+					data[year] = sales;
+				}
+				results.push({ month: monthStr, ...data });
 			}
-			return results.reverse();
+			return results;
 		},
 		refetchOnWindowFocus: false,
 	});
 
 	// Get selectors from the store
-	const { salesPerDay, salesPerCity, salesPerModel } = usePropostasStore();
+	const { salesPerDay, salesPerCity } = usePropostasStore();
 
 	// Selector for Tipo de Proposta (NOVA vs REPOSICAO)
 	const tipoPropostaPie = useMemo(() => {
 		const start = startDate.toISOString().slice(0, 10);
 		const end = endDate.toISOString().slice(0, 10);
 		const propostas = usePropostasStore.getState().propostas;
-		const filtered = propostas.filter(p => p.DATA_VENDA >= start && p.DATA_VENDA <= end);
+		const filtered = propostas.filter(
+			(p) => p.DT_BORDERO >= start && p.DT_BORDERO <= end
+		);
 		const total = filtered.length;
 		const counts = filtered.reduce(
 			(acc, p) => {
@@ -79,20 +82,38 @@ export default function useDashboardContainer() {
 			{ NOVA: 0, REPOSICAO: 0 } as Record<'NOVA' | 'REPOSICAO', number>
 		);
 		return [
-			{ tipo: 'NOVA', value: counts.NOVA, perc: total ? Math.round((counts.NOVA / total) * 100) : 0 },
-			{ tipo: 'REPOSICAO', value: counts.REPOSICAO, perc: total ? Math.round((counts.REPOSICAO / total) * 100) : 0 },
+			{
+				tipo: 'NOVA',
+				value: counts.NOVA,
+				perc: total ? Math.round((counts.NOVA / total) * 100) : 0,
+			},
+			{
+				tipo: 'REPOSICAO',
+				value: counts.REPOSICAO,
+				perc: total ? Math.round((counts.REPOSICAO / total) * 100) : 0,
+			},
 		];
 	}, [startDate, endDate, usePropostasStore.getState().propostas]);
 
 	// Memoized chart data
-	const productPie = useMemo(
-		() =>
-			salesPerModel(
-				startDate.toISOString().slice(0, 10),
-				endDate.toISOString().slice(0, 10)
-			),
-		[startDate, endDate, salesPerModel]
-	);
+	const productPie = useMemo(() => {
+		const start = startDate.toISOString().slice(0, 10);
+		const end = endDate.toISOString().slice(0, 10);
+		const propostas = usePropostasStore.getState().propostas;
+		const filtered = propostas.filter(
+			(p) => p.DT_BORDERO >= start && p.DT_BORDERO <= end
+		);
+		const grouped: Record<string, number> = {};
+		filtered.forEach((p) => {
+			const plan = (p.NOME_PLANO || '').trim();
+			if (!plan) return;
+			grouped[plan] = (grouped[plan] || 0) + 1;
+		});
+		return Object.entries(grouped).map(([name, sales]) => ({
+			name,
+			sales,
+		}));
+	}, [startDate, endDate, usePropostasStore.getState().propostas]);
 	const cityPie = useMemo(
 		() =>
 			salesPerCity(
