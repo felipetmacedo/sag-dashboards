@@ -1,5 +1,5 @@
 # Web application
-dashboard.sagzap.com.br{
+dashboard.sagzap.com.br {
     encode gzip
     header {
         Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
