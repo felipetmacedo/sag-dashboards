@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import SagLogo from "@/assets/img/logo-sag.png";
 import { motion } from "framer-motion";
 import { useTokenStore } from "@/stores/token.store";
+import { useQueryClient } from "@tanstack/react-query";
 
 // Define a common interface for all navigation links
 interface NavLink {
@@ -21,9 +22,11 @@ export default function SideBar({ children }: { children: React.ReactNode }) {
     const navigate = useNavigate();
     const [open, setOpen] = useState(true);
     const { clearToken } = useTokenStore();
+    const queryClient = useQueryClient();
 
     const handleLogout = async () => {
         clearToken();
+        queryClient.clear();
         navigate("/login");
         toast.success("Deslogado com sucesso!")
     };
