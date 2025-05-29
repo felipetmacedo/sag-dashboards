@@ -7,7 +7,7 @@ services:
       target: builder
     env_file: ./apps/front/.env.production
     networks:
-      - apollocrm
+      - sagdashboard
     expose:
       - "5173"
 
@@ -24,7 +24,7 @@ services:
       - caddy_data:/data
       - caddy_config:/config
     networks:
-      - apollocrm
+      - sagdashboard
     depends_on:
       - front
 
