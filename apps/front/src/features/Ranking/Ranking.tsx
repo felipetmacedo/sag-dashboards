@@ -17,12 +17,12 @@ import {
 	SelectValue,
 } from '@/components/ui/select';
 import { DatePicker } from '@/components/ui/date-picker';
-import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 
 import useRanking, { RankingType } from './Ranking.container';
 import { exportToCsv } from '@/utils/export-to-csv';
+import { Input } from '@/components/ui/input';
 
 export default function Ranking() {
 	const {
@@ -37,17 +37,23 @@ export default function Ranking() {
 		exportData,
 		exportHeaders,
 		isLoading,
-		isError,
+		searchFilter,
+		setSearchFilter,
 	} = useRanking();
+
+	// Wrapper functions to handle the type conversion
+	const handleStartDateChange = (date: Date | null) => {
+		if (date) setStartDate(date);
+	};
+
+	const handleEndDateChange = (date: Date | null) => {
+		if (date) setEndDate(date);
+	};
 
 	// Format percentage for display
 	const formatPercent = (value: number) => {
 		return `${value.toFixed(2)}%`;
 	};
-
-	// Date state as ISO strings for DatePicker compatibility
-	const startDateString = startDate ? startDate.toISOString() : null;
-	const endDateString = endDate ? endDate.toISOString() : null;
 
 	// Format currency for display
 	const formatCurrency = (value: number) => {
@@ -74,7 +80,7 @@ export default function Ranking() {
 			<div className="mb-6">
 				<div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
 					<h1 className="text-2xl font-bold text-apollo-gray-dark flex items-center gap-2">
-						<BarChart3 className="inline-block" /> Ranking
+						<BarChart3 className="inline-block" /> Rankings
 					</h1>
 					<Button
 						variant="outline"
@@ -93,7 +99,7 @@ export default function Ranking() {
 				</CardHeader>
 				<CardContent>
 					<div className="flex flex-col md:flex-row gap-4">
-						<div className="w-full md:w-1/3">
+						<div className="w-full md:w-1/4">
 							<label className="text-sm font-medium mb-1 block">
 								Tipo de Ranking
 							</label>
@@ -121,80 +127,92 @@ export default function Ranking() {
 							</Select>
 						</div>
 
-						<div className="w-full md:w-1/3">
+						<div className="w-full md:w-1/4">
+							<label className="text-sm font-medium mb-1 block">
+								{rankingTypeLabels[rankingType]}
+							</label>
+							<Input
+								placeholder={`Buscar por ${rankingTypeLabels[
+									rankingType
+								].toLowerCase()}...`}
+								value={searchFilter}
+								onChange={(e) =>
+									setSearchFilter(e.target.value)
+								}
+							/>
+						</div>
+
+						<div className="w-full md:w-1/4">
 							<label className="text-sm font-medium mb-1 block">
 								Data Inicial
 							</label>
 							<DatePicker
-								value={startDateString}
-								onChange={(date) => {
-									if (date) setStartDate(new Date(date));
-								}}
-								placeholder="Data inicial"
+								value={startDate}
+								onChange={handleStartDateChange}
 							/>
 						</div>
 
-						<div className="w-full md:w-1/3">
+						<div className="w-full md:w-1/4">
 							<label className="text-sm font-medium mb-1 block">
 								Data Final
 							</label>
 							<DatePicker
-								value={endDateString}
-								onChange={(date) => {
-									if (date) setEndDate(new Date(date));
-								}}
-								placeholder="Data final"
+								value={endDate}
+								onChange={handleEndDateChange}
 							/>
 						</div>
 					</div>
 				</CardContent>
 			</Card>
 
-			{isLoading ? (
-				<Card>
-					<CardHeader className="pb-3">
-						<CardTitle>
-							<Skeleton className="h-6 w-3/4" />
-						</CardTitle>
-					</CardHeader>
-					<CardContent>
-						<div className="space-y-2">
-							<Skeleton className="h-10 w-full" />
-							<Skeleton className="h-10 w-full" />
-							<Skeleton className="h-10 w-full" />
-							<Skeleton className="h-10 w-full" />
-							<Skeleton className="h-10 w-full" />
-							<Skeleton className="h-10 w-full" />
-							<Skeleton className="h-10 w-full" />
-						</div>
-					</CardContent>
-				</Card>
-			) : isError ? (
-				<Card>
-					<CardContent>
-						<div className="text-center text-red-500 mt-2 p-3 bg-red-50 border border-red-200 rounded">
-							Erro ao carregar dados. Por favor, tente novamente.
-						</div>
-					</CardContent>
-				</Card>
-			) : (
-				<Card>
-					<CardHeader className="pb-3">
-						<CardTitle>
-							Ranking por {rankingTypeLabels[rankingType]} -{' '}
-							{format(startDate, 'dd/MM/yyyy')} até{' '}
-							{format(endDate, 'dd/MM/yyyy')}
-						</CardTitle>
-					</CardHeader>
-					<CardContent>
-						{data.length === 0 ? (
-							<div className="text-center py-8">
-								<p className="text-gray-500">
-									Nenhum dado encontrado para o período
-									selecionado.
-								</p>
+			<Card>
+				<CardHeader className="pb-3">
+					<CardTitle>
+						Ranking por {rankingTypeLabels[rankingType]} -{' '}
+						{format(startDate, 'dd/MM/yyyy')} até{' '}
+						{format(endDate, 'dd/MM/yyyy')}
+					</CardTitle>
+				</CardHeader>
+				<CardContent>
+					{isLoading ? (
+						<div className="space-y-3">
+							{/* Table skeleton */}
+							<div className="overflow-x-auto">
+								<div className="h-6 w-1/4 bg-gray-200 rounded animate-pulse mb-4"></div>
+								<div className="space-y-2">
+									<div className="h-10 w-full bg-gray-200 rounded animate-pulse"></div>
+									{[...Array(5)].map((_, index) => (
+										<div
+											key={index}
+											className="h-12 w-full bg-gray-200 rounded animate-pulse"
+										></div>
+									))}
+								</div>
 							</div>
-						) : (
+
+							{/* Plans skeleton for vendor type */}
+							{rankingType === 'vendor' && (
+								<div className="mt-8">
+									<div className="h-6 w-1/3 bg-gray-200 rounded animate-pulse mb-4"></div>
+									<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+										{[...Array(3)].map((_, index) => (
+											<div
+												key={index}
+												className="h-64 bg-gray-200 rounded animate-pulse"
+											></div>
+										))}
+									</div>
+								</div>
+							)}
+						</div>
+					) : data.length === 0 ? (
+						<div className="text-center py-8">
+							<p className="text-gray-500">
+								Nenhum dado encontrado para o período
+								selecionado.
+							</p>
+						</div>
+					) : (
 						<div className="overflow-x-auto">
 							<Table>
 								<TableHeader>
@@ -221,6 +239,12 @@ export default function Ranking() {
 												</TableHead>
 												<TableHead className="text-right">
 													Ticket Médio
+												</TableHead>
+												<TableHead className="text-right">
+													NOVA
+												</TableHead>
+												<TableHead className="text-right">
+													REPOSICAO
 												</TableHead>
 											</>
 										)}
@@ -265,17 +289,121 @@ export default function Ranking() {
 																	0
 															)}
 														</TableCell>
+														<TableCell className="text-right">
+															{item.tipoBreakdown
+																? item.tipoBreakdown.find(
+																		(t) =>
+																			t.tipo ===
+																			'NOVA'
+																  )?.value || 0
+																: 0}
+														</TableCell>
+														<TableCell className="text-right">
+															{item.tipoBreakdown
+																? item.tipoBreakdown.find(
+																		(t) =>
+																			t.tipo ===
+																			'REPOSICAO'
+																  )?.value || 0
+																: 0}
+														</TableCell>
 													</>
 												)}
 										</TableRow>
 									))}
 								</TableBody>
 							</Table>
+
+							{/* Display plans for vendors */}
+							{rankingType === 'vendor' && data.length > 0 && (
+								<div className="mt-8">
+									<h3 className="text-lg font-semibold mb-4">
+										Detalhamento por Plano
+									</h3>
+									<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+										{data.map((item, index) => (
+											<Card
+												key={`plan-${index}`}
+												className="overflow-hidden"
+											>
+												<CardHeader className="pb-2">
+													<CardTitle className="text-md">
+														{item.key === null
+															? 'Não informado'
+															: item.key}
+													</CardTitle>
+												</CardHeader>
+												<CardContent className="p-0">
+													<Table>
+														<TableHeader>
+															<TableRow>
+																<TableHead>
+																	Plano
+																</TableHead>
+																<TableHead className="text-right">
+																	QTD.
+																</TableHead>
+																<TableHead className="text-right">
+																	%
+																</TableHead>
+															</TableRow>
+														</TableHeader>
+														<TableBody>
+															{item.plans &&
+															item.plans.length >
+																0 ? (
+																item.plans.map(
+																	(
+																		plan,
+																		planIndex
+																	) => (
+																		<TableRow
+																			key={`plan-${index}-${planIndex}`}
+																		>
+																			<TableCell className="font-medium">
+																				{
+																					plan.plan
+																				}
+																			</TableCell>
+																			<TableCell className="text-right">
+																				{
+																					plan.qtd
+																				}
+																			</TableCell>
+																			<TableCell className="text-right">
+																				{formatPercent(
+																					plan.percent
+																				)}
+																			</TableCell>
+																		</TableRow>
+																	)
+																)
+															) : (
+																<TableRow>
+																	<TableCell
+																		colSpan={
+																			3
+																		}
+																		className="text-center text-sm text-gray-500"
+																	>
+																		Nenhum
+																		plano
+																		encontrado
+																	</TableCell>
+																</TableRow>
+															)}
+														</TableBody>
+													</Table>
+												</CardContent>
+											</Card>
+										))}
+									</div>
+								</div>
+							)}
 						</div>
 					)}
-					</CardContent>
-				</Card>
-			)}
+				</CardContent>
+			</Card>
 		</div>
 	);
 }
