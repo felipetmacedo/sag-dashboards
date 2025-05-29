@@ -1,5 +1,5 @@
-import React, { useMemo } from 'react';
-import { BarChart3, Download } from 'lucide-react';
+import React, { useMemo, useState, useCallback } from 'react';
+import { BarChart3, Download, ChevronUp, ChevronDown } from 'lucide-react';
 
 import {
 	Table,
@@ -20,8 +20,16 @@ import {
 import { DatePicker } from '@/components/ui/date-picker';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
+import {
+	ColumnDef,
+	flexRender,
+	getCoreRowModel,
+	useReactTable,
+	SortingState,
+	getSortedRowModel,
+} from '@tanstack/react-table';
 
-import useRanking, { RankingType } from './Ranking.container';
+import useRanking, { RankingType, RankingRow } from './Ranking.container';
 import { exportToCsv } from '@/utils/export-to-csv';
 import { Input } from '@/components/ui/input';
 
@@ -51,18 +59,18 @@ export default function Ranking() {
 		if (date) setEndDate(date);
 	};
 
-	// Format percentage for display
-	const formatPercent = (value: number) => {
+	// Format percentage for display - using useCallback to avoid dependency issues in useMemo
+	const formatPercent = useCallback((value: number) => {
 		return `${value.toFixed(2)}%`;
-	};
+	}, []);
 
-	// Format currency for display
-	const formatCurrency = (value: number) => {
+	// Format currency for display - using useCallback to avoid dependency issues in useMemo
+	const formatCurrency = useCallback((value: number) => {
 		return value.toLocaleString('pt-BR', {
 			style: 'currency',
 			currency: 'BRL',
 		});
-	};
+	}, []);
 
 	// Handle export to CSV
 	const handleExport = () => {
@@ -79,25 +87,437 @@ export default function Ranking() {
 	// Extract all unique plan names from data for vendor ranking
 	const uniquePlans = useMemo(() => {
 		if (rankingType !== 'vendor' || !data.length) return [];
-		
-		const plansSet = new Set<string>();
-		data.forEach(item => {
+
+		// Create a map to store plans by name to avoid duplicates
+		const plansMap = new Map<string, string>();
+
+		data.forEach((item) => {
 			if (item.plans && item.plans.length > 0) {
-				item.plans.forEach(plan => {
-					plansSet.add(plan.plan);
+				item.plans.forEach((plan) => {
+					// Normalize plan name to avoid case differences or whitespace issues
+					const normalizedName = plan.plan.trim();
+					plansMap.set(normalizedName, normalizedName);
 				});
 			}
 		});
-		
-		return Array.from(plansSet).sort();
+
+		// Convert map values to array and sort
+		return Array.from(plansMap.values()).sort();
 	}, [data, rankingType]);
 
 	// Helper to find plan quantity for a vendor
-	const getVendorPlanQtd = (item: any, planName: string) => {
-		if (!item.plans) return 0;
-		const plan = item.plans.find(p => p.plan === planName);
-		return plan ? plan.qtd : 0;
-	};
+	const getVendorPlanQtd = useCallback(
+		(item: RankingRow, planName: string) => {
+			if (!item.plans) return 0;
+			const plan = item.plans.find(
+				(p: { plan: string; qtd: number }) => p.plan.trim() === planName
+			);
+			return plan ? plan.qtd : 0;
+		},
+		[]
+	);
+
+	// Table sorting state - default sort by quantity descending
+	const [sorting, setSorting] = useState<SortingState>([
+		{ id: 'qtd', desc: true },
+	]);
+
+	// Define columns based on ranking type
+	const columns = useMemo<ColumnDef<RankingRow>[]>(() => {
+		// Base columns for all ranking types
+		const baseColumns: ColumnDef<RankingRow>[] = [
+			{
+				accessorKey: 'key',
+				header: ({ column }) => (
+					<div>
+						<Button
+							variant="ghost"
+							onClick={() =>
+								column.toggleSorting(
+									column.getIsSorted() === 'asc'
+								)
+							}
+							className="px-0 font-medium text-xs"
+						>
+							{rankingTypeLabels[rankingType]}
+							{column.getIsSorted() &&
+								(column.getIsSorted() === 'asc' ? (
+									<ChevronUp className="ml-2 h-4 w-4" />
+								) : (
+									<ChevronDown className="ml-2 h-4 w-4" />
+								))}
+						</Button>
+					</div>
+				),
+				cell: ({ row }) => {
+					const value = row.getValue('key');
+					return (
+						<div className="font-medium">
+							{value === null ? 'Não informado' : value}
+						</div>
+					);
+				},
+			},
+			{
+				accessorKey: 'qtd',
+				header: ({ column }) => (
+					<div className="text-xs px-0">
+						<Button
+							variant="ghost"
+							onClick={() =>
+								column.toggleSorting(
+									column.getIsSorted() === 'asc'
+								)
+							}
+							className="px-0 font-medium justify-end w-full text-xs"
+						>
+							<span
+								className={
+									sorting[0]?.id === 'qtd' ? 'font-bold' : ''
+								}
+							>
+								QTD.
+							</span>
+							{column.getIsSorted() &&
+								(column.getIsSorted() === 'asc' ? (
+									<ChevronUp className="ml-2 h-4 w-4" />
+								) : (
+									<ChevronDown className="ml-2 h-4 w-4" />
+								))}
+						</Button>
+					</div>
+				),
+				cell: ({ row }) => (
+					<div className="text-right">{row.getValue('qtd')}</div>
+				),
+			},
+			{
+				accessorKey: 'percent',
+				header: ({ column }) => (
+					<div className="text-xs px-0">
+						<Button
+							variant="ghost"
+							onClick={() =>
+								column.toggleSorting(
+									column.getIsSorted() === 'asc'
+								)
+							}
+							className="px-0 font-medium justify-end w-full text-xs"
+						>
+							<span
+								className={
+									sorting[0]?.id === 'percent'
+										? 'font-bold'
+										: ''
+								}
+							>
+								%
+							</span>
+							{column.getIsSorted() &&
+								(column.getIsSorted() === 'asc' ? (
+									<ChevronUp className="ml-2 h-4 w-4" />
+								) : (
+									<ChevronDown className="ml-2 h-4 w-4" />
+								))}
+						</Button>
+					</div>
+				),
+				cell: ({ row }) => {
+					const value = row.getValue<number>('percent');
+					return (
+						<div className="text-right">{formatPercent(value)}</div>
+					);
+				},
+			},
+		];
+
+		// Add city-specific columns
+		if (rankingType === 'city') {
+			baseColumns.splice(
+				1,
+				0,
+				{
+					accessorKey: 'population',
+					header: ({ column }) => (
+						<div className="text-xs px-0">
+							<Button
+								variant="ghost"
+								onClick={() =>
+									column.toggleSorting(
+										column.getIsSorted() === 'asc'
+									)
+								}
+								className="px-0 font-medium text-xs"
+							>
+								População
+								{column.getIsSorted() &&
+									(column.getIsSorted() === 'asc' ? (
+										<ChevronUp className="ml-2 h-4 w-4" />
+									) : (
+										<ChevronDown className="ml-2 h-4 w-4" />
+									))}
+							</Button>
+						</div>
+					),
+					cell: ({ row }) => {
+						const value = row.getValue('population');
+						return <div>{value || '-'}</div>;
+					},
+				},
+				{
+					accessorKey: 'med12',
+					header: ({ column }) => (
+						<div className="text-xs px-0">
+							<Button
+								variant="ghost"
+								onClick={() =>
+									column.toggleSorting(
+										column.getIsSorted() === 'asc'
+									)
+								}
+								className="px-0 font-medium text-xs"
+							>
+								Med. 12
+								{column.getIsSorted() &&
+									(column.getIsSorted() === 'asc' ? (
+										<ChevronUp className="ml-2 h-4 w-4" />
+									) : (
+										<ChevronDown className="ml-2 h-4 w-4" />
+									))}
+							</Button>
+						</div>
+					),
+					cell: ({ row }) => {
+						const value = row.getValue('med12');
+						return <div>{value || '-'}</div>;
+					},
+				}
+			);
+		}
+
+		// Add vendor-specific columns
+		if (rankingType === 'vendor') {
+			// Add valor total, ticket médio, etc.
+			baseColumns.push(
+				{
+					accessorKey: 'valorTotal',
+					header: ({ column }) => (
+						<div className="text-xs px-0">
+							<Button
+								variant="ghost"
+								onClick={() =>
+									column.toggleSorting(
+										column.getIsSorted() === 'asc'
+									)
+								}
+								className="px-0 font-medium justify-end w-full text-xs"
+							>
+								Valor Total
+								{column.getIsSorted() &&
+									(column.getIsSorted() === 'asc' ? (
+										<ChevronUp className="ml-2 h-4 w-4" />
+									) : (
+										<ChevronDown className="ml-2 h-4 w-4" />
+									))}
+							</Button>
+						</div>
+					),
+					cell: ({ row }) => {
+						const value = row.getValue<number | undefined>(
+							'valorTotal'
+						);
+						return (
+							<div className="text-right">
+								{value !== undefined
+									? formatCurrency(value)
+									: '-'}
+							</div>
+						);
+					},
+				},
+				{
+					accessorKey: 'ticketMedio',
+					header: ({ column }) => (
+						<div className="text-xs px-0">
+							<Button
+								variant="ghost"
+								onClick={() =>
+									column.toggleSorting(
+										column.getIsSorted() === 'asc'
+									)
+								}
+								className="px-0 font-medium justify-end w-full text-xs"
+							>
+								Ticket Médio
+								{column.getIsSorted() &&
+									(column.getIsSorted() === 'asc' ? (
+										<ChevronUp className="ml-2 h-4 w-4" />
+									) : (
+										<ChevronDown className="ml-2 h-4 w-4" />
+									))}
+							</Button>
+						</div>
+					),
+					cell: ({ row }) => {
+						const value = row.getValue<number | undefined>(
+							'ticketMedio'
+						);
+						return (
+							<div className="text-right">
+								{value !== undefined
+									? formatCurrency(value || 0)
+									: '-'}
+							</div>
+						);
+					},
+				},
+				{
+					id: 'nova',
+					header: ({ column }) => (
+						<div className="text-xs px-0">
+							<Button
+								variant="ghost"
+								onClick={() =>
+									column.toggleSorting(
+										column.getIsSorted() === 'asc'
+									)
+								}
+								className="px-0 font-medium justify-end w-full text-xs"
+							>
+								NOVA
+								{column.getIsSorted() &&
+									(column.getIsSorted() === 'asc' ? (
+										<ChevronUp className="ml-2 h-4 w-4" />
+									) : (
+										<ChevronDown className="ml-2 h-4 w-4" />
+									))}
+							</Button>
+						</div>
+					),
+					cell: ({ row }) => {
+						const item = row.original;
+						const value = item.tipoBreakdown
+							? item.tipoBreakdown.find(
+									(t: { tipo: string; value: number }) =>
+										t.tipo === 'NOVA'
+							  )?.value || 0
+							: 0;
+						return <div className="text-right">{value}</div>;
+					},
+					accessorFn: (row) => {
+						return row.tipoBreakdown
+							? row.tipoBreakdown.find(
+									(t: { tipo: string; value: number }) =>
+										t.tipo === 'NOVA'
+							  )?.value || 0
+							: 0;
+					},
+				},
+				{
+					id: 'reposicao',
+					header: ({ column }) => (
+						<div className="text-xs px-0">
+							<Button
+								variant="ghost"
+								onClick={() =>
+									column.toggleSorting(
+										column.getIsSorted() === 'asc'
+									)
+								}
+								className="px-0 font-medium justify-end w-full text-xs "
+							>
+								REPOSICAO
+								{column.getIsSorted() &&
+									(column.getIsSorted() === 'asc' ? (
+										<ChevronUp className="ml-2 h-4 w-4" />
+									) : (
+										<ChevronDown className="ml-2 h-4 w-4" />
+									))}
+							</Button>
+						</div>
+					),
+					cell: ({ row }) => {
+						const item = row.original;
+						const value = item.tipoBreakdown
+							? item.tipoBreakdown.find(
+									(t: { tipo: string; value: number }) =>
+										t.tipo === 'REPOSICAO'
+							  )?.value || 0
+							: 0;
+						return <div className="text-right">{value}</div>;
+					},
+					accessorFn: (row) => {
+						return row.tipoBreakdown
+							? row.tipoBreakdown.find(
+									(t: { tipo: string; value: number }) =>
+										t.tipo === 'REPOSICAO'
+							  )?.value || 0
+							: 0;
+					},
+				}
+			);
+
+			uniquePlans.forEach((planName) => {
+				baseColumns.push({
+					id: `plan-${planName}`,
+					header: ({ column }) => (
+						<div className="text-xs px-0">
+							<Button
+								variant="ghost"
+								onClick={() =>
+									column.toggleSorting(
+										column.getIsSorted() === 'asc'
+									)
+								}
+								className="px-0 font-medium justify-end w-full text-xs"
+							>
+								{planName}
+								{column.getIsSorted() &&
+									(column.getIsSorted() === 'asc' ? (
+										<ChevronUp className="ml-2 h-4 w-4" />
+									) : (
+										<ChevronDown className="ml-2 h-4 w-4" />
+									))}
+							</Button>
+						</div>
+					),
+					cell: ({ row }) => {
+						const item = row.original;
+						return (
+							<div className="text-right">
+								{getVendorPlanQtd(item, planName)}
+							</div>
+						);
+					},
+					accessorFn: (row) => {
+						return getVendorPlanQtd(row, planName);
+					},
+				});
+			});
+		}
+
+		return baseColumns;
+	}, [
+		rankingType,
+		rankingTypeLabels,
+		uniquePlans,
+		formatCurrency,
+		formatPercent,
+		getVendorPlanQtd,
+		sorting,
+	]);
+
+	// Initialize the table
+	const table = useReactTable({
+		data,
+		columns,
+		state: {
+			sorting,
+		},
+		onSortingChange: setSorting,
+		getSortedRowModel: getSortedRowModel(),
+		getCoreRowModel: getCoreRowModel(),
+	});
 
 	return (
 		<div className="p-4">
@@ -225,113 +645,67 @@ export default function Ranking() {
 						<div className="overflow-x-auto">
 							<Table>
 								<TableHeader>
-									<TableRow>
-										<TableHead>
-											{rankingTypeLabels[rankingType]}
-										</TableHead>
-										{rankingType === 'city' && (
-											<TableHead>População</TableHead>
-										)}
-										{rankingType === 'city' && (
-											<TableHead>Med. 12</TableHead>
-										)}
-										<TableHead className="text-right">
-											QTD.
-										</TableHead>
-										<TableHead className="text-right">
-											%
-										</TableHead>
-										{rankingType === 'vendor' && (
-											<>
-												<TableHead className="text-right">
-													Valor Total
-												</TableHead>
-												<TableHead className="text-right">
-													Ticket Médio
-												</TableHead>
-												<TableHead className="text-right">
-													NOVA
-												</TableHead>
-												<TableHead className="text-right">
-													REPOSICAO
-												</TableHead>
-												{/* Add plan headers for vendor type */}
-												{uniquePlans.map(plan => (
-													<TableHead key={plan} className="text-right">
-														{plan}
-													</TableHead>
-												))}
-											</>
-										)}
-									</TableRow>
+									{table
+										.getHeaderGroups()
+										.map((headerGroup) => (
+											<TableRow key={headerGroup.id}>
+												{headerGroup.headers.map(
+													(header) => (
+														<TableHead
+															key={header.id}
+															className="text-xs"
+														>
+															{header.isPlaceholder
+																? null
+																: flexRender(
+																		header
+																			.column
+																			.columnDef
+																			.header,
+																		header.getContext()
+																  )}
+														</TableHead>
+													)
+												)}
+											</TableRow>
+										))}
 								</TableHeader>
 								<TableBody>
-									{data.map((item, index) => (
-										<TableRow key={index}>
-											<TableCell className="font-medium">
-												{item.key === null
-													? 'Não informado'
-													: item.key}
-											</TableCell>
-											{rankingType === 'city' && (
-												<TableCell>
-													{item.population || '-'}
-												</TableCell>
-											)}
-											{rankingType === 'city' && (
-												<TableCell>
-													{item.med12 || '-'}
-												</TableCell>
-											)}
-											<TableCell className="text-right">
-												{item.qtd}
-											</TableCell>
-											<TableCell className="text-right">
-												{formatPercent(item.percent)}
-											</TableCell>
-											{rankingType === 'vendor' &&
-												item.valorTotal !==
-													undefined && (
-													<>
-														<TableCell className="text-right">
-															{formatCurrency(
-																item.valorTotal
+									{table.getRowModel().rows?.length ? (
+										table.getRowModel().rows.map((row) => (
+											<TableRow
+												key={row.id}
+												data-state={
+													row.getIsSelected() &&
+													'selected'
+												}
+											>
+												{row
+													.getVisibleCells()
+													.map((cell) => (
+														<TableCell
+															key={cell.id}
+														>
+															{flexRender(
+																cell.column
+																	.columnDef
+																	.cell,
+																cell.getContext()
 															)}
 														</TableCell>
-														<TableCell className="text-right">
-															{formatCurrency(
-																item.ticketMedio ||
-																	0
-															)}
-														</TableCell>
-														<TableCell className="text-right">
-															{item.tipoBreakdown
-																? item.tipoBreakdown.find(
-																		(t) =>
-																			t.tipo ===
-																			'NOVA'
-																  )?.value || 0
-																: 0}
-														</TableCell>
-														<TableCell className="text-right">
-															{item.tipoBreakdown
-																? item.tipoBreakdown.find(
-																		(t) =>
-																			t.tipo ===
-																			'REPOSICAO'
-																  )?.value || 0
-																: 0}
-														</TableCell>
-														{/* Add plan data cells for vendor type */}
-														{uniquePlans.map(plan => (
-															<TableCell key={`${index}-${plan}`} className="text-right">
-																{getVendorPlanQtd(item, plan)}
-															</TableCell>
-														))}
-													</>
-												)}
+													))}
+											</TableRow>
+										))
+									) : (
+										<TableRow>
+											<TableCell
+												colSpan={columns.length}
+												className="h-24 text-center"
+											>
+												Nenhum resultado encontrado.
+											</TableCell>
 										</TableRow>
-									))}
+									)}
 								</TableBody>
 							</Table>
 						</div>
