@@ -7,8 +7,6 @@ import Dashboard from "@/features/Dashboard"
 import Teams from "@/features/Teams";
 import Users from "@/features/Users";
 import Requests from "@/features/Requests";
-import Invitation from "@/features/Invitation";
-import ConsultasOfc from "@/features/ConsultasOfc";
 import Lists from "@/features/Lists";
 import ListView from "@/features/ListView";
 
@@ -45,14 +43,6 @@ export const router = createBrowserRouter([
             {
                 path: "requests",
                 element: <Requests />
-            },
-            {
-                path: "invitation",
-                element: <Invitation />
-            },
-            {
-                path: "consultas",
-                element: <ConsultasOfc />
             },
             {
                 path: "lists",
