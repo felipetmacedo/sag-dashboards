@@ -34,7 +34,7 @@ export default function Login() {
 								Login
 							</CardTitle>
 							<CardDescription>
-								Token de autenticação para acessar o SAG dashboards
+								Código de autenticação para acessar o SAG dashboards
 							</CardDescription>
 						</CardHeader>
 						<CardContent>
@@ -43,7 +43,7 @@ export default function Login() {
 								className="space-y-4"
 							>
 								<div className="space-y-2">
-									<Label htmlFor="token">Token</Label>
+									<Label htmlFor="token">Código</Label>
 									<Input
 										id="token"
 										type="text"
@@ -55,7 +55,7 @@ export default function Login() {
 									/>
 									{errors.token && (
 										<p className="text-sm text-red-500">
-											Token é obrigatório
+											Código é obrigatório
 										</p>
 									)}
 								</div>
