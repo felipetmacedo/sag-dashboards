@@ -1,3 +1,4 @@
+import React, { useMemo } from 'react';
 import { BarChart3, Download } from 'lucide-react';
 
 import {
@@ -73,6 +74,29 @@ export default function Ranking() {
 				'dd-MM-yyyy'
 			)}_a_${format(endDate, 'dd-MM-yyyy')}`,
 		});
+	};
+
+	// Extract all unique plan names from data for vendor ranking
+	const uniquePlans = useMemo(() => {
+		if (rankingType !== 'vendor' || !data.length) return [];
+		
+		const plansSet = new Set<string>();
+		data.forEach(item => {
+			if (item.plans && item.plans.length > 0) {
+				item.plans.forEach(plan => {
+					plansSet.add(plan.plan);
+				});
+			}
+		});
+		
+		return Array.from(plansSet).sort();
+	}, [data, rankingType]);
+
+	// Helper to find plan quantity for a vendor
+	const getVendorPlanQtd = (item: any, planName: string) => {
+		if (!item.plans) return 0;
+		const plan = item.plans.find(p => p.plan === planName);
+		return plan ? plan.qtd : 0;
 	};
 
 	return (
@@ -189,21 +213,6 @@ export default function Ranking() {
 									))}
 								</div>
 							</div>
-
-							{/* Plans skeleton for vendor type */}
-							{rankingType === 'vendor' && (
-								<div className="mt-8">
-									<div className="h-6 w-1/3 bg-gray-200 rounded animate-pulse mb-4"></div>
-									<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-										{[...Array(3)].map((_, index) => (
-											<div
-												key={index}
-												className="h-64 bg-gray-200 rounded animate-pulse"
-											></div>
-										))}
-									</div>
-								</div>
-							)}
 						</div>
 					) : data.length === 0 ? (
 						<div className="text-center py-8">
@@ -246,6 +255,12 @@ export default function Ranking() {
 												<TableHead className="text-right">
 													REPOSICAO
 												</TableHead>
+												{/* Add plan headers for vendor type */}
+												{uniquePlans.map(plan => (
+													<TableHead key={plan} className="text-right">
+														{plan}
+													</TableHead>
+												))}
 											</>
 										)}
 									</TableRow>
@@ -307,99 +322,18 @@ export default function Ranking() {
 																  )?.value || 0
 																: 0}
 														</TableCell>
+														{/* Add plan data cells for vendor type */}
+														{uniquePlans.map(plan => (
+															<TableCell key={`${index}-${plan}`} className="text-right">
+																{getVendorPlanQtd(item, plan)}
+															</TableCell>
+														))}
 													</>
 												)}
 										</TableRow>
 									))}
 								</TableBody>
 							</Table>
-
-							{/* Display plans for vendors */}
-							{rankingType === 'vendor' && data.length > 0 && (
-								<div className="mt-8">
-									<h3 className="text-lg font-semibold mb-4">
-										Detalhamento por Plano
-									</h3>
-									<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-										{data.map((item, index) => (
-											<Card
-												key={`plan-${index}`}
-												className="overflow-hidden"
-											>
-												<CardHeader className="pb-2">
-													<CardTitle className="text-md">
-														{item.key === null
-															? 'Não informado'
-															: item.key}
-													</CardTitle>
-												</CardHeader>
-												<CardContent className="p-0">
-													<Table>
-														<TableHeader>
-															<TableRow>
-																<TableHead>
-																	Plano
-																</TableHead>
-																<TableHead className="text-right">
-																	QTD.
-																</TableHead>
-																<TableHead className="text-right">
-																	%
-																</TableHead>
-															</TableRow>
-														</TableHeader>
-														<TableBody>
-															{item.plans &&
-															item.plans.length >
-																0 ? (
-																item.plans.map(
-																	(
-																		plan,
-																		planIndex
-																	) => (
-																		<TableRow
-																			key={`plan-${index}-${planIndex}`}
-																		>
-																			<TableCell className="font-medium">
-																				{
-																					plan.plan
-																				}
-																			</TableCell>
-																			<TableCell className="text-right">
-																				{
-																					plan.qtd
-																				}
-																			</TableCell>
-																			<TableCell className="text-right">
-																				{formatPercent(
-																					plan.percent
-																				)}
-																			</TableCell>
-																		</TableRow>
-																	)
-																)
-															) : (
-																<TableRow>
-																	<TableCell
-																		colSpan={
-																			3
-																		}
-																		className="text-center text-sm text-gray-500"
-																	>
-																		Nenhum
-																		plano
-																		encontrado
-																	</TableCell>
-																</TableRow>
-															)}
-														</TableBody>
-													</Table>
-												</CardContent>
-											</Card>
-										))}
-									</div>
-								</div>
-							)}
 						</div>
 					)}
 				</CardContent>
