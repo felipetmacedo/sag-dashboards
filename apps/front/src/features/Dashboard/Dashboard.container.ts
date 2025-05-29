@@ -36,6 +36,16 @@ export default function useDashboardContainer() {
 	// Ensure propostas is always an array
 	const propostas = useMemo(() => Array.isArray(propostasRaw) ? propostasRaw : [], [propostasRaw]);
 
+	// Calculate total number of proposals and total revenue in the filtered period
+	const { totalPropostas, totalFaturamento } = useMemo(() => {
+		const filteredPropostas = propostas.filter((p: Proposta) => p.DT_BORDERO);
+		const total = filteredPropostas.length;
+		const faturamento = filteredPropostas.reduce((sum: number, p: Proposta) => {
+			return sum + (Number(p.VALOR_PARCELA) || 0);
+		}, 0);
+		return { totalPropostas: total, totalFaturamento: faturamento };
+	}, [propostas]);
+
 	const {
 		data: propostasLastTwoYearsRaw,
 		isLoading: loadingLastTwoYears,
@@ -134,10 +144,13 @@ export default function useDashboardContainer() {
 		endDate,
 		setEndDate,
 		loading: loadingCurrent || loadingLastTwoYears,
-		productPie,
-		tipoPropostaPie,
+		propostas,
 		propostasLastTwoYears,
 		propostasLastTwoYearsChart,
+		productPie,
+		tipoPropostaPie,
+		totalPropostas,
+		totalFaturamento,
 		refetchCurrent,
 		refetchLastTwoYears,
 		errorCurrent,

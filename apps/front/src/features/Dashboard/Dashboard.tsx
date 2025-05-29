@@ -13,8 +13,10 @@ import {
 	XAxis,
 	YAxis,
 	Legend,
+	LabelList,
 } from 'recharts';
 import { LayoutDashboard } from 'lucide-react';
+import { format } from 'date-fns';
 
 export default function DashboardPage() {
 	const {
@@ -26,6 +28,8 @@ export default function DashboardPage() {
 		productPie,
 		tipoPropostaPie,
 		propostasLastTwoYearsChart,
+		totalPropostas,
+		totalFaturamento,
 		errorCurrent,
 		errorLastTwoYears,
 	} = useDashboardContainer();
@@ -57,7 +61,21 @@ export default function DashboardPage() {
 						<DatePicker
 							value={startDateString}
 							onChange={(date) => {
-								if (date) setStartDate(new Date(date));
+								if (date) {
+									const newStartDate = new Date(date);
+									setStartDate(newStartDate);
+									
+									// Check if the new range exceeds 2 years
+									if (endDate) {
+										const twoYearsFromStart = new Date(newStartDate);
+										twoYearsFromStart.setFullYear(twoYearsFromStart.getFullYear() + 2);
+										
+										// If end date is more than 2 years from start date, adjust end date
+										if (endDate > twoYearsFromStart) {
+											setEndDate(twoYearsFromStart);
+										}
+									}
+								}
 							}}
 							placeholder="Data inicial"
 						/>
@@ -66,7 +84,21 @@ export default function DashboardPage() {
 						<DatePicker
 							value={endDateString}
 							onChange={(date) => {
-								if (date) setEndDate(new Date(date));
+								if (date) {
+									const newEndDate = new Date(date);
+									setEndDate(newEndDate);
+									
+									// Check if the new range exceeds 2 years
+									if (startDate) {
+										const twoYearsBeforeEnd = new Date(newEndDate);
+										twoYearsBeforeEnd.setFullYear(twoYearsBeforeEnd.getFullYear() - 2);
+										
+										// If start date is more than 2 years before end date, adjust start date
+										if (startDate < twoYearsBeforeEnd) {
+											setStartDate(twoYearsBeforeEnd);
+										}
+									}
+								}
 							}}
 							placeholder="Data final"
 						/>
@@ -75,7 +107,18 @@ export default function DashboardPage() {
 			</div>
 			{loading ? (
 				<div className="space-y-8">
-					{/* Skeleton loading for top row */}
+					{/* Skeleton loading for summary cards */}
+					<div className="grid grid-cols-2 gap-8 mb-8">
+						<div className="bg-white p-6 rounded-xl shadow-md animate-pulse border-t-4 border-purple-400">
+							<div className="h-6 bg-gray-200 rounded w-1/2 mb-4"></div>
+							<div className="h-8 bg-gray-200 rounded w-1/3"></div>
+						</div>
+						<div className="bg-white p-6 rounded-xl shadow-md animate-pulse border-t-4 border-green-400">
+							<div className="h-6 bg-gray-200 rounded w-1/2 mb-4"></div>
+							<div className="h-8 bg-gray-200 rounded w-1/3"></div>
+						</div>
+					</div>
+					{/* Skeleton loading for charts */}
 					<div className="grid grid-cols-2 gap-8">
 						{/* Skeleton for first chart */}
 						<div className="bg-white rounded-sm shadow-xl p-6 border-t-4 border-pink-400 w-full flex flex-row">
@@ -97,13 +140,48 @@ export default function DashboardPage() {
 
 					{/* Error message if needed */}
 					{errorCurrent || errorLastTwoYears ? (
-						<div className="text-center text-red-500 mt-2 p-3 bg-red-50 border border-red-200 rounded">
-							Erro ao carregar dados. Por favor, tente novamente.
+						<div className="bg-white p-6 rounded-lg shadow-sm">
+							<p className="text-red-600">
+								Erro ao carregar dados:{' '}
+								{errorCurrent?.message ||
+									errorLastTwoYears?.message}
+							</p>
 						</div>
 					) : null}
 				</div>
 			) : (
 				<div className="space-y-8">
+					{/* Top row - 2 column grid for summary cards */}
+					<div className="grid grid-cols-2 gap-8 mb-8">
+						<div className="bg-white p-6 rounded-xl shadow-md border-t-4 border-purple-400">
+							<h2 className="text-lg font-semibold text-gray-700 mb-2">
+								Total de Propostas
+							</h2>
+							<p className="text-3xl font-bold text-purple-600">
+								{totalPropostas.toLocaleString('pt-BR')}
+							</p>
+							<p className="text-sm text-gray-500 mt-2">
+								No período de {format(startDate, 'dd/MM/yyyy')}{' '}
+								a {format(endDate, 'dd/MM/yyyy')}
+							</p>
+						</div>
+						<div className="bg-white p-6 rounded-xl shadow-md border-t-4 border-green-400">
+							<h2 className="text-lg font-semibold text-gray-700 mb-2">
+								Total de Faturamento
+							</h2>
+							<p className="text-3xl font-bold text-green-600">
+								{new Intl.NumberFormat('pt-BR', {
+									style: 'currency',
+									currency: 'BRL',
+								}).format(totalFaturamento)}
+							</p>
+							<p className="text-sm text-gray-500 mt-2">
+								No período de {format(startDate, 'dd/MM/yyyy')}{' '}
+								a {format(endDate, 'dd/MM/yyyy')}
+							</p>
+						</div>
+					</div>
+
 					{/* Top row - 2 column grid for pie charts */}
 					<div className="grid grid-cols-2 gap-8">
 						{/* Pie Chart - Tipo de Proposta */}
@@ -295,7 +373,18 @@ export default function DashboardPage() {
 											style={{
 												filter: 'drop-shadow(1px 2px 2px rgba(80,80,80,0.10))',
 											}}
-										/>
+										>
+											<LabelList
+												dataKey={year}
+												position="center"
+												fontSize={11}
+												fill="#ffffff"
+												fontWeight="bold"
+												formatter={(value: number) =>
+													value > 0 ? value : ''
+												}
+											/>
+										</Bar>
 									))}
 							</BarChart>
 						</ResponsiveContainer>
