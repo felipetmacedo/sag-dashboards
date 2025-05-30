@@ -117,7 +117,7 @@ export default function RelatoriosContainer() {
             dailyReport[dateStr].quantidade += 1;
           }
         }
-      } catch (err) {
+      } catch {
         console.error('Error parsing date:', proposta.DT_BORDERO);
       }
     });
@@ -179,7 +179,7 @@ export default function RelatoriosContainer() {
           // Increment date count for vendor
           salesMap[vendorName][dateStr] = (salesMap[vendorName][dateStr] || 0) + 1;
         }
-      } catch (err) {
+      } catch {
         console.error('Error parsing date:', proposta.DT_BORDERO);
       }
     });
@@ -246,7 +246,7 @@ export default function RelatoriosContainer() {
             monthlyData[monthKey].quantidade += 1;
           }
         }
-      } catch (err) {
+      } catch {
         console.error('Error parsing date:', proposta.DT_BORDERO);
       }
     });
@@ -295,7 +295,7 @@ export default function RelatoriosContainer() {
           // Increment month count for vendor
           salesMap[vendorName][monthNumber] = (salesMap[vendorName][monthNumber] || 0) + 1;
         }
-      } catch (err) {
+      } catch {
         console.error('Error parsing date:', proposta.DT_BORDERO);
       }
     });

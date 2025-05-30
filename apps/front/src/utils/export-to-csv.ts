@@ -7,7 +7,7 @@ interface CsvHeader {
 }
 
 interface ExportToCsvParams {
-    data: any[]; // Dados no formato JSON
+    data: any[]; // Dados no formato JSON - aceita qualquer tipo de relatório
     headers: CsvHeader[]; // Cabeçalhos do CSV
     filename?: string; // Nome do arquivo (opcional, com valor padrão)
 }
@@ -25,9 +25,7 @@ export const exportToCsv = ({ data, headers, filename = "export" }: ExportToCsvP
 
         // Verifica se os cabeçalhos foram fornecidos
         if (!headers || headers.length === 0) {
-            toast({
-                title: "Cabeçalhos não fornecidos",
-            })
+            toast.error("Cabeçalhos não fornecidos")
             return;
         }
 
@@ -57,9 +55,7 @@ export const exportToCsv = ({ data, headers, filename = "export" }: ExportToCsvP
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
     } catch (error) {
-        toast({
-            title: "Erro ao exportar para CSV",
-        })
+        toast.error("Erro ao exportar para CSV")
         console.error("Erro ao exportar para CSV:", error);
     }
 };

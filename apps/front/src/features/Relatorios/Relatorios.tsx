@@ -1,4 +1,4 @@
-import { Download, BarChart3, LineChart, Users } from 'lucide-react';
+import { Download, BarChart3, LineChart, Users, FileText } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { exportToCsv } from '@/utils/export-to-csv';
+import { exportToPdf } from '@/utils/export-to-pdf';
 
 import RelatoriosContainer from './Relatorios.container';
 
@@ -41,6 +42,19 @@ export default function Relatorios() {
 		});
 	};
 
+	// Export daily sales report as PDF
+	const handleExportDailySalesPdf = () => {
+		exportToPdf({
+			data: dailySalesReport,
+			headers: dailySalesHeaders,
+			filename: `venda_diaria_${format(new Date(), 'MMM-yyyy', {
+				locale: ptBR,
+			})}`,
+			title: 'Relatório de Venda Diária',
+			subtitle: `${currentMonthName}`,
+		});
+	};
+
 	// Export daily sales by vendor report
 	const handleExportDailySalesByVendor = () => {
 		exportToCsv({
@@ -54,6 +68,21 @@ export default function Relatorios() {
 		});
 	};
 
+	// Export daily sales by vendor report as PDF
+	const handleExportDailySalesByVendorPdf = () => {
+		exportToPdf({
+			data: dailySalesByVendorReport,
+			headers: dailySalesByVendorHeaders,
+			filename: `venda_diaria_por_vendedor_${format(
+				new Date(),
+				'MMM-yyyy',
+				{ locale: ptBR }
+			)}`,
+			title: 'Relatório de Venda Diária por Vendedor',
+			subtitle: `${currentMonthName}`,
+		});
+	};
+
 	// Export monthly sales report
 	const handleExportMonthlySales = () => {
 		exportToCsv({
@@ -63,12 +92,34 @@ export default function Relatorios() {
 		});
 	};
 
+	// Export monthly sales report as PDF
+	const handleExportMonthlySalesPdf = () => {
+		exportToPdf({
+			data: monthlySalesReport,
+			headers: monthlySalesHeaders,
+			filename: `venda_mensal_${currentYearDisplay}`,
+			title: 'Relatório de Venda Mensal',
+			subtitle: `${currentYearDisplay}`,
+		});
+	};
+
 	// Export monthly sales by vendor report
 	const handleExportMonthlySalesByVendor = () => {
 		exportToCsv({
 			data: monthlySalesByVendorReport,
 			headers: monthlySalesByVendorHeaders,
 			filename: `venda_mensal_por_vendedor_${currentYearDisplay}`,
+		});
+	};
+
+	// Export monthly sales by vendor report as PDF
+	const handleExportMonthlySalesByVendorPdf = () => {
+		exportToPdf({
+			data: monthlySalesByVendorReport,
+			headers: monthlySalesByVendorHeaders,
+			filename: `venda_mensal_por_vendedor_${currentYearDisplay}`,
+			title: 'Relatório de Venda Mensal por Vendedor',
+			subtitle: `${currentYearDisplay}`,
 		});
 	};
 
@@ -135,14 +186,22 @@ export default function Relatorios() {
 								</div>
 							</div>
 						</CardContent>
-						<CardFooter>
+						<CardFooter className="flex gap-2">
 							<Button
 								onClick={handleExportDailySales}
 								variant="outline"
-								className="w-full flex items-center justify-center gap-2"
+								className="flex-1 flex items-center justify-center gap-2"
 							>
 								<Download size={16} />
-								Exportar CSV
+								CSV
+							</Button>
+							<Button
+								onClick={handleExportDailySalesPdf}
+								variant="outline"
+								className="flex-1 flex items-center justify-center gap-2"
+							>
+								<FileText size={16} />
+								PDF
 							</Button>
 						</CardFooter>
 					</Card>
@@ -181,14 +240,22 @@ export default function Relatorios() {
 								</div>
 							</div>
 						</CardContent>
-						<CardFooter>
+						<CardFooter className="flex gap-2">
 							<Button
 								onClick={handleExportDailySalesByVendor}
 								variant="outline"
-								className="w-full flex items-center justify-center gap-2"
+								className="flex-1 flex items-center justify-center gap-2"
 							>
 								<Download size={16} />
-								Exportar CSV
+								CSV
+							</Button>
+							<Button
+								onClick={handleExportDailySalesByVendorPdf}
+								variant="outline"
+								className="flex-1 flex items-center justify-center gap-2"
+							>
+								<FileText size={16} />
+								PDF
 							</Button>
 						</CardFooter>
 					</Card>
@@ -225,14 +292,22 @@ export default function Relatorios() {
 								</div>
 							</div>
 						</CardContent>
-						<CardFooter>
+						<CardFooter className="flex gap-2">
 							<Button
 								onClick={handleExportMonthlySales}
 								variant="outline"
-								className="w-full flex items-center justify-center gap-2"
+								className="flex-1 flex items-center justify-center gap-2"
 							>
 								<Download size={16} />
-								Exportar CSV
+								CSV
+							</Button>
+							<Button
+								onClick={handleExportMonthlySalesPdf}
+								variant="outline"
+								className="flex-1 flex items-center justify-center gap-2"
+							>
+								<FileText size={16} />
+								PDF
 							</Button>
 						</CardFooter>
 					</Card>
@@ -271,14 +346,22 @@ export default function Relatorios() {
 								</div>
 							</div>
 						</CardContent>
-						<CardFooter>
+						<CardFooter className="flex gap-2">
 							<Button
 								onClick={handleExportMonthlySalesByVendor}
 								variant="outline"
-								className="w-full flex items-center justify-center gap-2"
+								className="flex-1 flex items-center justify-center gap-2"
 							>
 								<Download size={16} />
-								Exportar CSV
+								CSV
+							</Button>
+							<Button
+								onClick={handleExportMonthlySalesByVendorPdf}
+								variant="outline"
+								className="flex-1 flex items-center justify-center gap-2"
+							>
+								<FileText size={16} />
+								PDF
 							</Button>
 						</CardFooter>
 					</Card>
