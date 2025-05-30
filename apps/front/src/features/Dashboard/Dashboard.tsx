@@ -52,7 +52,7 @@ export default function DashboardPage() {
 
 	return (
 		<div className="flex flex-col gap-8 p-8 w-full min-h-screen">
-			<div className="flex items-center justify-between mb-2 ">
+			<div className="flex items-center justify-between mb-2 gap-2">
 				<h1 className="text-2xl font-bold text-apollo-gray-dark flex items-center gap-2">
 					<LayoutDashboard className="inline-block" /> Dashboard
 				</h1>
@@ -152,7 +152,7 @@ export default function DashboardPage() {
 			) : (
 				<div className="space-y-8">
 					{/* Top row - 2 column grid for summary cards */}
-					<div className="grid grid-cols-2 gap-8 mb-8">
+					<div className="grid grid-cols-1 gap-8 mb-8 md:grid-cols-2">
 						<div className="bg-white p-6 rounded-sm shadow-md border-t-4 border-purple-400">
 							<h2 className="text-lg font-semibold text-gray-700 mb-2">
 								Total de Propostas
@@ -183,7 +183,7 @@ export default function DashboardPage() {
 					</div>
 
 					{/* Top row - 2 column grid for pie charts */}
-					<div className="grid grid-cols-2 gap-8">
+					<div className="grid grid-cols-1 gap-8 md:grid-cols-2">
 						{/* Pie Chart - Tipo de Proposta */}
 						<div className="bg-white rounded-sm shadow-xl p-6 border-t-4 border-pink-400 w-full">
 							<h2 className="text-xl font-bold mb-4 text-pink-600 tracking-tight text-center">
