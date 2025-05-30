@@ -69,7 +69,7 @@ export const rankingTypeLabels: { [type in RankingType]: string } = {
 const calculateTotalValue = (propostas: Proposta[]): number => {
 	return propostas.reduce((total, p) => {
 		// Parse the value from string to number, defaulting to 0 if invalid
-		const value = p.VALOR_PARCELA ? parseFloat(p.VALOR_PARCELA) : 0;
+		const value = p.VALOR_CREDITO_BASE ? parseFloat(p.VALOR_CREDITO_BASE) : 0;
 		return total + value;
 	}, 0);
 };

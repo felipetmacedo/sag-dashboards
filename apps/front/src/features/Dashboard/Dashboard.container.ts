@@ -41,7 +41,7 @@ export default function useDashboardContainer() {
 		const filteredPropostas = propostas.filter((p: Proposta) => p.DT_BORDERO);
 		const total = filteredPropostas.length;
 		const faturamento = filteredPropostas.reduce((sum: number, p: Proposta) => {
-			return sum + (Number(p.VALOR_PARCELA) || 0);
+			return sum + (Number(p.VALOR_CREDITO_BASE) || 0);
 		}, 0);
 		return { totalPropostas: total, totalFaturamento: faturamento };
 	}, [propostas]);

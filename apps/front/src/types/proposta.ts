@@ -87,6 +87,7 @@ export interface Proposta {
 	NUMCHEQUE: string | null;
 	PERMITE_DIV_LISTA: string | null;
 	ENVIO_SMS: string;
+	STATUS: string;
 	OPCAOLANCELIVRE: number;
 	OPCAOLANCEFIXO: number;
 	VLRLANCELIVRE: string;
