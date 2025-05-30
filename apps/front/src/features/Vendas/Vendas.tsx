@@ -1,5 +1,10 @@
-import { useMemo } from 'react';
-import { Banknote, Download } from 'lucide-react';
+import { useMemo, useState, useCallback } from 'react';
+import {
+	Download,
+	ChevronUp,
+	ChevronDown,
+	Banknote,
+} from 'lucide-react';
 
 import {
 	Table,
@@ -10,13 +15,19 @@ import {
 	TableRow,
 } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-	DatePicker,
-} from '@/components/ui/date-picker';
+import { DatePicker } from '@/components/ui/date-picker';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
+import {
+	ColumnDef,
+	flexRender,
+	getCoreRowModel,
+	useReactTable,
+	SortingState,
+	getSortedRowModel,
+} from '@tanstack/react-table';
 
-import VendasContainer from './Vendas.container';
+import VendasContainer, { RankingRow } from './Vendas.container';
 import { exportToCsv } from '@/utils/export-to-csv';
 import { Input } from '@/components/ui/input';
 
@@ -45,18 +56,18 @@ export default function Vendas() {
 		if (date) setEndDate(date);
 	};
 
-	// Format percentage for display
-	const formatPercent = (value: number) => {
+	// Format percentage for display - using useCallback to avoid dependency issues in useMemo
+	const formatPercent = useCallback((value: number) => {
 		return `${value.toFixed(2)}%`;
-	};
+	}, []);
 
-	// Format currency for display
-	const formatCurrency = (value: number) => {
+	// Format currency for display - using useCallback to avoid dependency issues in useMemo
+	const formatCurrency = useCallback((value: number) => {
 		return value.toLocaleString('pt-BR', {
 			style: 'currency',
 			currency: 'BRL',
 		});
-	};
+	}, []);
 
 	// Handle export to CSV
 	const handleExport = () => {
@@ -70,35 +81,233 @@ export default function Vendas() {
 		});
 	};
 
-	// Extract all unique plan names from data for vendor ranking
-	const uniquePlans = useMemo(() => {
+	// Extract all unique status values from data for vendor ranking
+	const uniqueStatuses = useMemo(() => {
 		if (rankingType !== 'vendor' || !data.length) return [];
-		
-		const plansSet = new Set<string>();
-		data.forEach(item => {
+
+		// Create a map to store statuses by name to avoid duplicates
+		const statusMap = new Map<string, string>();
+
+		data.forEach((item) => {
 			if (item.plans && item.plans.length > 0) {
-				item.plans.forEach(plan => {
-					plansSet.add(plan.plan);
+				item.plans.forEach((plan) => {
+					// Normalize status name to avoid case differences or whitespace issues
+					const normalizedName = plan.plan.trim();
+					statusMap.set(normalizedName, normalizedName);
 				});
 			}
 		});
-		
-		return Array.from(plansSet).sort();
+
+		// Convert map values to array and sort
+		return Array.from(statusMap.values()).sort();
 	}, [data, rankingType]);
 
-	// Helper to find plan quantity for a vendor
-	const getVendorPlanQtd = (item: any, planName: string) => {
-		if (!item.plans) return 0;
-		const plan = item.plans.find(p => p.plan === planName);
-		return plan ? plan.qtd : 0;
-	};
+	// Helper to find status data for a vendor
+	const getVendorStatusData = useCallback(
+		(item: RankingRow, statusName: string) => {
+			if (!item.plans) return { qtd: 0, percent: 0 };
+			const statusItem = item.plans.find(
+				(p: { plan: string; qtd: number; percent: number }) => p.plan.trim() === statusName
+			);
+			return statusItem ? { qtd: statusItem.qtd, percent: statusItem.percent } : { qtd: 0, percent: 0 };
+		},
+		[]
+	);
+
+	// Table sorting state - default sort by quantity descending
+	const [sorting, setSorting] = useState<SortingState>([
+		{ id: 'qtd', desc: true },
+	]);
+
+	// Define columns based on ranking type
+	const columns = useMemo<ColumnDef<RankingRow>[]>(() => {
+		// Base columns for all ranking types
+		const baseColumns: ColumnDef<RankingRow>[] = [
+			{
+				accessorKey: 'key',
+				header: ({ column }) => (
+					<div>
+						<Button
+							variant="ghost"
+							onClick={() =>
+								column.toggleSorting(
+									column.getIsSorted() === 'asc'
+								)
+							}
+							className="px-0 font-medium text-xs"
+						>
+							{rankingTypeLabels[rankingType]}
+							{column.getIsSorted() &&
+								(column.getIsSorted() === 'asc' ? (
+									<ChevronUp className="ml-2 h-4 w-4" />
+								) : (
+									<ChevronDown className="ml-2 h-4 w-4" />
+								))}
+						</Button>
+					</div>
+				),
+				cell: ({ row }) => {
+					const value = row.getValue('key');
+					return (
+						<div className="font-medium">
+							{value === null ? 'Não informado' : value}
+						</div>
+					);
+				},
+			},
+			{
+				accessorKey: 'qtd',
+				header: ({ column }) => (
+					<div className="text-xs px-0">
+						<Button
+							variant="ghost"
+							onClick={() =>
+								column.toggleSorting(
+									column.getIsSorted() === 'asc'
+								)
+							}
+							className="px-0 font-medium justify-end w-full text-xs"
+						>
+							<span
+								className={
+									sorting[0]?.id === 'qtd' ? 'font-bold' : ''
+								}
+							>
+								QTD.
+							</span>
+							{column.getIsSorted() &&
+								(column.getIsSorted() === 'asc' ? (
+									<ChevronUp className="ml-2 h-4 w-4" />
+								) : (
+									<ChevronDown className="ml-2 h-4 w-4" />
+								))}
+						</Button>
+					</div>
+				),
+				cell: ({ row }) => {
+					const qtd = row.original.qtd;
+					const percent = row.original.percent;
+					return (
+						<div className="text-right">
+							{qtd} ({formatPercent(percent)})
+						</div>
+					);
+				},
+				accessorFn: (row) => {
+					return row.qtd;
+				},
+			},
+			
+		];
+
+		// Add vendor-specific columns
+		if (rankingType === 'vendor') {
+			// Add valor total, ticket médio, etc.
+			baseColumns.push({
+				accessorKey: 'valorTotal',
+				header: ({ column }) => (
+					<div className="text-xs px-0">
+						<Button
+							variant="ghost"
+							onClick={() =>
+								column.toggleSorting(
+									column.getIsSorted() === 'asc'
+								)
+							}
+							className="px-0 font-medium justify-end w-full text-xs"
+						>
+							Valor Total
+							{column.getIsSorted() &&
+								(column.getIsSorted() === 'asc' ? (
+									<ChevronUp className="ml-2 h-4 w-4" />
+								) : (
+									<ChevronDown className="ml-2 h-4 w-4" />
+								))}
+						</Button>
+					</div>
+				),
+				cell: ({ row }) => {
+					const value = row.getValue<number | undefined>(
+						'valorTotal'
+					);
+					return (
+						<div className="text-right">
+							{value !== undefined ? formatCurrency(value) : '-'}
+						</div>
+					);
+				},
+			});
+
+			uniqueStatuses.forEach((statusName) => {
+				baseColumns.push({
+					id: `status-${statusName}`,
+					header: ({ column }) => (
+						<div className="text-xs px-0">
+							<Button
+								variant="ghost"
+								onClick={() =>
+									column.toggleSorting(
+										column.getIsSorted() === 'asc'
+									)
+								}
+								className="px-0 font-medium justify-end w-full text-xs"
+							>
+								{statusName}
+								{column.getIsSorted() &&
+									(column.getIsSorted() === 'asc' ? (
+										<ChevronUp className="ml-2 h-4 w-4" />
+									) : (
+										<ChevronDown className="ml-2 h-4 w-4" />
+									))}
+							</Button>
+						</div>
+					),
+					cell: ({ row }) => {
+						const item = row.original;
+						const statusData = getVendorStatusData(item, statusName);
+						return (
+							<div className="text-right">
+								{statusData.qtd} ({statusData.percent.toFixed(2)}%)
+							</div>
+						);
+					},
+					accessorFn: (row) => {
+						return getVendorStatusData(row, statusName).qtd;
+					},
+				});
+			});
+		}
+
+		return baseColumns;
+	}, [
+		rankingType,
+		rankingTypeLabels,
+		uniqueStatuses,
+		formatCurrency,
+		formatPercent,
+		getVendorStatusData,
+		sorting,
+	]);
+
+	// Initialize the table
+	const table = useReactTable({
+		data,
+		columns,
+		state: {
+			sorting,
+		},
+		onSortingChange: setSorting,
+		getSortedRowModel: getSortedRowModel(),
+		getCoreRowModel: getCoreRowModel(),
+	});
 
 	return (
 		<div className="p-4">
 			<div className="mb-6">
 				<div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
 					<h1 className="text-2xl font-bold text-apollo-gray-dark flex items-center gap-2">
-						<Banknote className="inline-block" /> Análise da Qualidade de Vendas por Vendedor
+						<Banknote className="inline-block" /> Análise da
+						Qualidade de Vendas por Vendedor
 					</h1>
 					<Button
 						variant="outline"
@@ -158,7 +367,6 @@ export default function Vendas() {
 			<Card>
 				<CardHeader className="pb-3">
 					<CardTitle>
-						Período  -{' '}
 						{format(startDate, 'dd/MM/yyyy')} até{' '}
 						{format(endDate, 'dd/MM/yyyy')}
 					</CardTitle>
@@ -191,64 +399,67 @@ export default function Vendas() {
 						<div className="overflow-x-auto">
 							<Table>
 								<TableHeader>
-									<TableRow>
-										<TableHead>
-											{rankingTypeLabels[rankingType]}
-										</TableHead>
-										<TableHead className="text-right">
-											QTD.
-										</TableHead>
-										<TableHead className="text-right">
-											%
-										</TableHead>
-										{rankingType === 'vendor' && (
-											<>
-												<TableHead className="text-right">
-													Valor Total
-												</TableHead>
-												{/* Add plan headers for vendor type */}
-												{uniquePlans.map(plan => (
-													<TableHead key={plan} className="text-right">
-														{plan}
-													</TableHead>
-												))}
-											</>
-										)}
-									</TableRow>
+									{table
+										.getHeaderGroups()
+										.map((headerGroup) => (
+											<TableRow key={headerGroup.id}>
+												{headerGroup.headers.map(
+													(header) => (
+														<TableHead
+															key={header.id}
+															className="text-xs"
+														>
+															{header.isPlaceholder
+																? null
+																: flexRender(
+																		header
+																			.column
+																			.columnDef
+																			.header,
+																		header.getContext()
+																  )}
+														</TableHead>
+													)
+												)}
+											</TableRow>
+										))}
 								</TableHeader>
 								<TableBody>
-									{data.map((item, index) => (
-										<TableRow key={index}>
-											<TableCell className="font-medium">
-												{item.key === null
-													? 'Não informado'
-													: item.key}
-											</TableCell>
-											<TableCell className="text-right">
-												{item.qtd}
-											</TableCell>
-											<TableCell className="text-right">
-												{formatPercent(item.percent)}
-											</TableCell>
-											{rankingType === 'vendor' &&
-												item.valorTotal !==
-													undefined && (
-													<>
-														<TableCell className="text-right">
-															{formatCurrency(
-																item.valorTotal
+									{table.getRowModel().rows?.length ? (
+										table.getRowModel().rows.map((row) => (
+											<TableRow
+												key={row.id}
+												data-state={
+													row.getIsSelected() &&
+													'selected'
+												}
+											>
+												{row
+													.getVisibleCells()
+													.map((cell) => (
+														<TableCell
+															key={cell.id}
+														>
+															{flexRender(
+																cell.column
+																	.columnDef
+																	.cell,
+																cell.getContext()
 															)}
 														</TableCell>
-														{/* Add plan data cells for vendor type */}
-														{uniquePlans.map(plan => (
-															<TableCell key={`${index}-${plan}`} className="text-right">
-																{getVendorPlanQtd(item, plan)}
-															</TableCell>
-														))}
-													</>
-												)}
+													))}
+											</TableRow>
+										))
+									) : (
+										<TableRow>
+											<TableCell
+												colSpan={columns.length}
+												className="h-24 text-center"
+											>
+												Nenhum resultado encontrado.
+											</TableCell>
 										</TableRow>
-									))}
+									)}
 								</TableBody>
 							</Table>
 						</div>

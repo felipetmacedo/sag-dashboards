@@ -98,17 +98,17 @@ const getProductBreakdown = (propostas: Proposta[]): ProductSales[] => {
 	return products.sort((a, b) => b.qtd - a.qtd);
 };
 
-// Helper function to get plan breakdown for a vendor
+// Helper function to get status breakdown for a vendor
 const getPlanBreakdown = (propostas: Proposta[]): PlanSales[] => {
-	// Group by plan name
+	// Group by status
 	const grouped: Record<string, Proposta[]> = {};
 	
 	propostas.forEach(p => {
-		const plan = p.NOME_PLANO || 'Não informado';
-		if (!grouped[plan]) {
-			grouped[plan] = [];
+		const status = p.STATUS || 'Não informado';
+		if (!grouped[status]) {
+			grouped[status] = [];
 		}
-		grouped[plan].push(p);
+		grouped[status].push(p);
 	});
 
 	const total = propostas.length;
@@ -290,30 +290,32 @@ export default function VendasContainer() {
 		if (rankingType === 'vendor') {
 			// Create a map to store vendor data by vendor name
 			const vendorMap = new Map<string, VendorExportData>();
+			// Calculate total value for percentages
+			const totalValue = data.reduce((sum, item) => sum + (item.valorTotal || 0), 0);
 			
 			data.forEach(item => {
 				const vendorName = item.key === null ? 'Não informado' : item.key.toString();
 				
 				// Initialize vendor data if not exists
 				if (!vendorMap.has(vendorName)) {
+					// Calculate value percentage
+					const valorPercentage = totalValue > 0 ? ((item.valorTotal || 0) / totalValue) * 100 : 0;
 					vendorMap.set(vendorName, {
 						'Vendedor': vendorName,
 						'Quantidade': item.qtd,
 						'Percentual': `${item.percent.toFixed(2)}%`,
-						'Valor Total': item.valorTotal?.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) || 'R$ 0,00',
+						'Valor Total': `${item.valorTotal?.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) || 'R$ 0,00'} (${valorPercentage.toFixed(2)}%)`,
 						'Ticket Médio': item.ticketMedio?.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) || 'R$ 0,00',
-						'NOVA': item.tipoBreakdown?.find(t => t.tipo === 'NOVA')?.value || 0,
-						'REPOSICAO': item.tipoBreakdown?.find(t => t.tipo === 'REPOSICAO')?.value || 0
 					});
 				}
 
 				const vendorData = vendorMap.get(vendorName)!;
 
-				// Add plans as columns
+				// Add status columns with both quantity and percentage
 				if (item.plans && item.plans.length > 0) {
 					item.plans.forEach(plan => {
-						const planName = plan.plan || 'Não informado';
-						vendorData[planName] = plan.qtd;
+						const statusName = plan.plan || 'Não informado';
+						vendorData[statusName] = `${plan.qtd} (${plan.percent.toFixed(2)}%)`;
 					});
 				}
 			});
