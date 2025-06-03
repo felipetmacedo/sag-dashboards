@@ -1,11 +1,11 @@
 import { Outlet } from 'react-router-dom';
 import { SideBar } from '@/components/sidebar';
-import { useTokenStore } from '@/stores/token.store';
+import { useLojasStore } from './stores/lojas.store';
 
 function App() {
-	const { token } = useTokenStore();
+	const { lojas } = useLojasStore();
 
-	if (!token) {
+	if (!lojas) {
 		return (
 			<>
 				<div className="flex h-screen overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:none]">

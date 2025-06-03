@@ -4,9 +4,9 @@ import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { yupResolver } from "@hookform/resolvers/yup";
-
+import { getUserLojas } from "@/processes/auth";
 import { loginSchema } from "@/schemas/auth";
-import { useTokenStore } from "@/stores/token.store";
+import { useLojasStore } from "@/stores/lojas.store";
 
 type LoginFormData = yup.InferType<typeof loginSchema>;
 
@@ -14,22 +14,29 @@ export default function LoginContainer() {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const { setToken } = useTokenStore();
+  const { setLojas } = useLojasStore();
 
   const { register, handleSubmit, formState: { errors } } = useForm<LoginFormData>({
     resolver: yupResolver(loginSchema)
   });
 
   const onSubmit = async (data: LoginFormData) => {
-    try {
+    try { 
       setIsLoading(true);
 
-      setToken(data.token);
+      try {
+        const response = await getUserLojas({
+          usuario: data.usuario,
+          senha: data.senha
+        });
 
-      navigate("/dashboard");
-      toast.success("Login realizado com sucesso!");
-    } catch {
-      toast.error("Token inválido!");
+        setLojas(response);
+
+        navigate("/dashboard");
+        toast.success("Login realizado com sucesso!");
+      } catch {
+        toast.error("Token inválido!");
+      }
     } finally {
       setIsLoading(false);
     }

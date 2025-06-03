@@ -1,5 +1,6 @@
 import * as yup from 'yup';
 
 export const loginSchema = yup.object({
-    token: yup.string().required()
+    usuario: yup.string().required(),
+    senha: yup.string().required()
 });

@@ -43,19 +43,36 @@ export default function Login() {
 								className="space-y-4"
 							>
 								<div className="space-y-2">
-									<Label htmlFor="token">Código</Label>
+									<Label htmlFor="usuario">Usuário</Label>
 									<Input
-										id="token"
+										id="usuario"
 										type="text"
-										placeholder="Código de autenticação"
-										{...register('token')}
+										placeholder="Usuário"
+										{...register('usuario')}
 										aria-invalid={
-											errors.token ? 'true' : 'false'
+											errors.usuario ? 'true' : 'false'
 										}
 									/>
-									{errors.token && (
+									{errors.usuario && (
 										<p className="text-sm text-red-500">
 											Código é obrigatório
+										</p>
+									)}
+								</div>
+								<div className="space-y-2">
+								<Label htmlFor="senha">Senha</Label>
+									<Input
+										id="senha"
+										type="password"
+										placeholder="Senha"
+										{...register('senha')}
+										aria-invalid={
+											errors.senha ? 'true' : 'false'
+										}
+									/>
+									{errors.senha && (
+										<p className="text-sm text-red-500">
+											Senha é obrigatória
 										</p>
 									)}
 								</div>

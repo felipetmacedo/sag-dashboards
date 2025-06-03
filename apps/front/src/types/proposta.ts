@@ -1,6 +1,7 @@
 export interface Proposta {
 	ID: number;
 	COD_PLANO: string | null;
+	TOKEN: string;
 	COD_CONCESS: string | null;
 	NUM_PROPOSTA: string;
 	DIG_PROPOSTA: string;

@@ -1,33 +1,39 @@
-import { useTokenStore } from '@/stores/token.store';
+import { useLojasStore } from '@/stores/lojas.store';
 import { toast } from 'sonner';
 import axios from 'axios';
 
 export async function fetchPropostas({
 	DT_INICIO,
 	DT_FINAL,
+	tokens
 }: {
 	DT_INICIO: string;
 	DT_FINAL: string;
+	tokens?: string[];
 }) {
-	const tokenStore = useTokenStore.getState();
-	const token = tokenStore.token;
-	if (!token) {
-		toast.error('Token não encontrado');
+	const lojasStore = useLojasStore.getState();
+	const lojas = lojasStore.lojas;
+
+	if (!lojas) {
+		toast.error('Lojas não encontradas');
 		return [];
 	}
 
+	const lojasTokens = lojas.map((loja) => loja.token_whatsapp);
+
 	const response = await axios.post(
-		'https://n8n.sagzap.com.br/webhook/propostas',
+		'https://webhook.n8n.sagzap.com.br/webhook/propostas',
 		{
-			codhda: token,
 			dataInicial: DT_INICIO,
 			dataFinal: DT_FINAL,
-			token: '73f4eaa45b90a00e8834d951074ba042',
+			tokens: tokens ? tokens : lojasTokens
 		}
 	);
-	if (!response.data.propostas) {
+
+	if (!response.data[0].propostas) {
 		toast.error('Erro ao buscar propostas');
 		return [];
 	}
-	return response.data.propostas;
+
+	return response.data[0].propostas;
 }
