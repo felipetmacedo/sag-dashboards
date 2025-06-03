@@ -1,11 +1,5 @@
 import { useMemo, useState, useCallback } from 'react';
-import {
-	Download,
-	ChevronUp,
-	ChevronDown,
-	Banknote,
-} from 'lucide-react';
-
+import { Download, ChevronUp, ChevronDown, Banknote } from 'lucide-react';
 import {
 	Table,
 	TableBody,
@@ -30,8 +24,14 @@ import {
 import VendasContainer, { RankingRow } from './Vendas.container';
 import { exportToCsv } from '@/utils/export-to-csv';
 import { Input } from '@/components/ui/input';
+import {
+	Collapsible,
+	CollapsibleContent,
+	CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 
 export default function Vendas() {
+	const [open, setOpen] = useState(false);
 	const {
 		data,
 		rankingType,
@@ -45,6 +45,10 @@ export default function Vendas() {
 		isLoading,
 		searchFilter,
 		setSearchFilter,
+		lojas,
+		selectedLoja,
+		setSelectedLoja,
+		displayLoja,
 	} = VendasContainer();
 
 	// Wrapper functions to handle the type conversion
@@ -107,9 +111,12 @@ export default function Vendas() {
 		(item: RankingRow, statusName: string) => {
 			if (!item.plans) return { qtd: 0, percent: 0 };
 			const statusItem = item.plans.find(
-				(p: { plan: string; qtd: number; percent: number }) => p.plan.trim() === statusName
+				(p: { plan: string; qtd: number; percent: number }) =>
+					p.plan.trim() === statusName
 			);
-			return statusItem ? { qtd: statusItem.qtd, percent: statusItem.percent } : { qtd: 0, percent: 0 };
+			return statusItem
+				? { qtd: statusItem.qtd, percent: statusItem.percent }
+				: { qtd: 0, percent: 0 };
 		},
 		[]
 	);
@@ -197,7 +204,6 @@ export default function Vendas() {
 					return row.qtd;
 				},
 			},
-			
 		];
 
 		// Add vendor-specific columns
@@ -264,10 +270,14 @@ export default function Vendas() {
 					),
 					cell: ({ row }) => {
 						const item = row.original;
-						const statusData = getVendorStatusData(item, statusName);
+						const statusData = getVendorStatusData(
+							item,
+							statusName
+						);
 						return (
 							<div className="text-right">
-								{statusData.qtd} ({statusData.percent.toFixed(2)}%)
+								{statusData.qtd} (
+								{statusData.percent.toFixed(2)}%)
 							</div>
 						);
 					},
@@ -304,11 +314,63 @@ export default function Vendas() {
 	return (
 		<div className="p-4">
 			<div className="mb-6">
-				<div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
-					<h1 className="text-2xl font-bold text-apollo-gray-dark flex items-center gap-2">
-						<Banknote className="inline-block" /> Análise da
-						Qualidade de Vendas por Vendedor
-					</h1>
+				<div className="flex items-center justify-between mb-2 gap-4 md:flex-row flex-col">
+					<Collapsible open={open} onOpenChange={setOpen}>
+						<div className="flex items-center gap-2 relative">
+							<Banknote className="inline-block" />
+							<CollapsibleTrigger asChild>
+								<button className="text-2xl font-bold text-apollo-gray-dark flex items-center gap-2 hover:underline focus:outline-none">
+									Qualidade Vendas por Vendedor - {displayLoja}
+									{open ? (
+										<ChevronUp size={18} />
+									) : (
+										<ChevronDown size={18} />
+									)}
+								</button>
+							</CollapsibleTrigger>
+						</div>
+						<CollapsibleContent className="z-10 relative">
+							<div className="absolute left-0 right-0 md:right-auto md:w-[340px] z-10 bg-white rounded shadow p-2 border">
+								<ul className="space-y-1">
+									<li>
+										<button
+											className={`w-full text-left px-2 py-1 rounded ${
+												!selectedLoja
+													? 'bg-purple-100 font-semibold'
+													: 'hover:bg-gray-100'
+											}`}
+											onClick={() => {
+												setSelectedLoja(null);
+												setOpen(false);
+											}}
+										>
+											Todas as Lojas
+										</button>
+									</li>
+									{lojas?.map((loja) => (
+										<li key={loja.token_whatsapp}>
+											<button
+												className={`w-full text-left px-2 py-1 rounded ${
+													selectedLoja ===
+													loja.token_whatsapp
+														? 'bg-purple-100 font-semibold'
+														: 'hover:bg-gray-100'
+												}`}
+												onClick={() => {
+													setSelectedLoja(
+														loja.token_whatsapp
+													);
+													setOpen(false);
+												}}
+											>
+												{loja.empresa}
+											</button>
+										</li>
+									))}
+								</ul>
+							</div>
+						</CollapsibleContent>
+					</Collapsible>
 					<Button
 						variant="outline"
 						className="flex items-center gap-2 bg-green-100"

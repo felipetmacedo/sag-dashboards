@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { fetchPropostas } from '@/processes/propostas';
 import type { Proposta } from '@/types/proposta';
 import { startOfMonth, endOfMonth } from 'date-fns';
+import { useLojasStore } from '@/stores/lojas.store';
 
 export type RankingType = 'vendor' | 'model' | 'city';
 
@@ -151,6 +152,15 @@ const getTipoBreakdown = (propostas: Proposta[]): TipoCount[] => {
 };
 
 export default function useRanking() {
+	const lojas = useLojasStore(state => state.lojas);
+	const [selectedLoja, setSelectedLoja] = useState<string | null>(null);
+
+	const displayLoja = useMemo(() => {
+		if (!selectedLoja) return 'Todas as Lojas';
+		const loja = lojas?.find(l => l.token_whatsapp === selectedLoja);
+		return loja?.empresa || 'Todas as Lojas';
+	}, [selectedLoja, lojas]);
+
 	// Default to current month
 	const currentDate = new Date();
 	const [startDate, setStartDate] = useState<Date>(startOfMonth(currentDate));
@@ -172,16 +182,16 @@ export default function useRanking() {
 			'ranking-propostas',
 			startDate.toISOString().slice(0, 10),
 			endDate.toISOString().slice(0, 10),
+			selectedLoja
 		],
 		queryFn: () =>
 			fetchPropostas({
 				DT_INICIO: startDate.toISOString().slice(0, 10),
 				DT_FINAL: endDate.toISOString().slice(0, 10),
+				tokens: selectedLoja ? [selectedLoja] : undefined
 			}),
 		refetchOnWindowFocus: false,
 	});
-
-
 
 	const data = useMemo(() => {
 		if (!propostasRaw) return [];
@@ -399,6 +409,10 @@ export default function useRanking() {
 		propostasRaw,
 		getVendorData,
 		exportData,
-		exportHeaders
+		exportHeaders,
+		lojas,
+		selectedLoja,
+		setSelectedLoja,
+		displayLoja
 	};
 }

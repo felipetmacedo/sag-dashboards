@@ -32,6 +32,11 @@ import {
 import useRanking, { RankingType, RankingRow } from './Ranking.container';
 import { exportToCsv } from '@/utils/export-to-csv';
 import { Input } from '@/components/ui/input';
+import {
+	Collapsible,
+	CollapsibleContent,
+	CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 
 export default function Ranking() {
 	const {
@@ -48,6 +53,9 @@ export default function Ranking() {
 		isLoading,
 		searchFilter,
 		setSearchFilter,
+		lojas,
+		selectedLoja,
+		setSelectedLoja,
 	} = useRanking();
 
 	// Wrapper functions to handle the type conversion
@@ -455,13 +463,70 @@ export default function Ranking() {
 		getCoreRowModel: getCoreRowModel(),
 	});
 
+	const [open, setOpen] = useState(false);
+	const selectedLojaObj = lojas?.find(l => l.token_whatsapp === selectedLoja);
+	const displayLoja = selectedLojaObj ? selectedLojaObj.empresa : 'Todas as Lojas';
+
 	return (
 		<div className="p-4">
 			<div className="mb-6">
-				<div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
-					<h1 className="text-2xl font-bold text-apollo-gray-dark flex items-center gap-2">
-						<BarChart3 className="inline-block" /> Rankings
-					</h1>
+				<div className="flex items-center justify-between mb-2 gap-4 md:flex-row flex-col">
+					<Collapsible open={open} onOpenChange={setOpen}>
+						<div className="flex items-center gap-2 relative">
+							<BarChart3 className="inline-block" />
+							<CollapsibleTrigger asChild>
+								<button className="text-2xl font-bold text-apollo-gray-dark flex items-center gap-2 hover:underline focus:outline-none">
+									Ranking - {displayLoja}
+									{open ? (
+										<ChevronUp size={18} />
+									) : (
+										<ChevronDown size={18} />
+									)}
+								</button>
+							</CollapsibleTrigger>
+						</div>
+						<CollapsibleContent className="z-10 relative">
+							<div className="absolute left-0 right-0 md:right-auto md:w-[340px] z-10 bg-white rounded shadow p-2 border">
+								<ul className="space-y-1">
+									<li>
+										<button
+											className={`w-full text-left px-2 py-1 rounded ${
+												!selectedLoja
+													? 'bg-purple-100 font-semibold'
+													: 'hover:bg-gray-100'
+											}`}
+											onClick={() => {
+												setSelectedLoja(null);
+												setOpen(false);
+											}}
+										>
+											Todas as Lojas
+										</button>
+									</li>
+									{lojas?.map((loja) => (
+										<li key={loja.token_whatsapp}>
+											<button
+												className={`w-full text-left px-2 py-1 rounded ${
+													selectedLoja ===
+													loja.token_whatsapp
+														? 'bg-purple-100 font-semibold'
+														: 'hover:bg-gray-100'
+												}`}
+												onClick={() => {
+													setSelectedLoja(
+														loja.token_whatsapp
+													);
+													setOpen(false);
+												}}
+											>
+												{loja.empresa}
+											</button>
+										</li>
+									))}
+								</ul>
+							</div>
+						</CollapsibleContent>
+					</Collapsible>
 					<Button
 						variant="outline"
 						className="flex items-center gap-2 bg-green-100"

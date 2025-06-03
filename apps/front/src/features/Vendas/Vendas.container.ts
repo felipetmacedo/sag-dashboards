@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { fetchPropostas } from '@/processes/propostas';
 import type { Proposta } from '@/types/proposta';
 import { startOfMonth, endOfMonth } from 'date-fns';
+import { useLojasStore } from '@/stores/lojas.store';
 
 export type RankingType = 'vendor' | 'model' | 'city';
 
@@ -69,7 +70,9 @@ export const rankingTypeLabels: { [type in RankingType]: string } = {
 const calculateTotalValue = (propostas: Proposta[]): number => {
 	return propostas.reduce((total, p) => {
 		// Parse the value from string to number, defaulting to 0 if invalid
-		const value = p.VALOR_CREDITO_BASE ? parseFloat(p.VALOR_CREDITO_BASE) : 0;
+		const value = p.VALOR_CREDITO_BASE
+			? parseFloat(p.VALOR_CREDITO_BASE)
+			: 0;
 		return total + value;
 	}, 0);
 };
@@ -78,8 +81,8 @@ const calculateTotalValue = (propostas: Proposta[]): number => {
 const getProductBreakdown = (propostas: Proposta[]): ProductSales[] => {
 	// Group by model
 	const grouped: Record<string, Proposta[]> = {};
-	
-	propostas.forEach(p => {
+
+	propostas.forEach((p) => {
 		const model = p.CODIGOMODELO || 'Não informado';
 		if (!grouped[model]) {
 			grouped[model] = [];
@@ -91,7 +94,7 @@ const getProductBreakdown = (propostas: Proposta[]): ProductSales[] => {
 	const products = Object.entries(grouped).map(([model, items]) => ({
 		model,
 		qtd: items.length,
-		percent: total ? (items.length / total) * 100 : 0
+		percent: total ? (items.length / total) * 100 : 0,
 	}));
 
 	// Sort by quantity descending
@@ -102,8 +105,8 @@ const getProductBreakdown = (propostas: Proposta[]): ProductSales[] => {
 const getPlanBreakdown = (propostas: Proposta[]): PlanSales[] => {
 	// Group by status
 	const grouped: Record<string, Proposta[]> = {};
-	
-	propostas.forEach(p => {
+
+	propostas.forEach((p) => {
 		const status = p.STATUS || 'Não informado';
 		if (!grouped[status]) {
 			grouped[status] = [];
@@ -115,7 +118,7 @@ const getPlanBreakdown = (propostas: Proposta[]): PlanSales[] => {
 	const plans = Object.entries(grouped).map(([plan, items]) => ({
 		plan,
 		qtd: items.length,
-		percent: total ? (items.length / total) * 100 : 0
+		percent: total ? (items.length / total) * 100 : 0,
 	}));
 
 	// Sort by quantity descending
@@ -160,6 +163,14 @@ export default function VendasContainer() {
 	const [selectedItem, setSelectedItem] = useState<string | null>(null);
 	// Search filter
 	const [searchFilter, setSearchFilter] = useState<string>('');
+	const lojas = useLojasStore((state) => state.lojas);
+	const [selectedLoja, setSelectedLoja] = useState<string | null>(null);
+
+	const displayLoja = useMemo(() => {
+		if (!selectedLoja) return 'Todas as Lojas';
+		const loja = lojas?.find((l) => l.token_whatsapp === selectedLoja);
+		return loja?.empresa || 'Todas as Lojas';
+	}, [selectedLoja, lojas]);
 
 	const {
 		data: propostasRaw,
@@ -172,16 +183,16 @@ export default function VendasContainer() {
 			'ranking-propostas',
 			startDate.toISOString().slice(0, 10),
 			endDate.toISOString().slice(0, 10),
+			selectedLoja,
 		],
 		queryFn: () =>
 			fetchPropostas({
 				DT_INICIO: startDate.toISOString().slice(0, 10),
 				DT_FINAL: endDate.toISOString().slice(0, 10),
+				tokens: selectedLoja ? [selectedLoja] : undefined,
 			}),
 		refetchOnWindowFocus: false,
 	});
-
-
 
 	const data = useMemo(() => {
 		if (!propostasRaw) return [];
@@ -217,7 +228,8 @@ export default function VendasContainer() {
 			// Add vendor-specific data if this is a vendor ranking
 			if (rankingType === 'vendor') {
 				const valorTotal = calculateTotalValue(items);
-				const ticketMedio = items.length > 0 ? valorTotal / items.length : 0;
+				const ticketMedio =
+					items.length > 0 ? valorTotal / items.length : 0;
 				const products = getProductBreakdown(items);
 				const plans = getPlanBreakdown(items);
 				const tipoBreakdown = getTipoBreakdown(items);
@@ -228,7 +240,7 @@ export default function VendasContainer() {
 					ticketMedio,
 					products,
 					plans,
-					tipoBreakdown
+					tipoBreakdown,
 				};
 			}
 
@@ -245,7 +257,8 @@ export default function VendasContainer() {
 			// Add vendor-specific data for null group if this is a vendor ranking
 			if (rankingType === 'vendor') {
 				const valorTotal = calculateTotalValue(nullGroup);
-				const ticketMedio = nullGroup.length > 0 ? valorTotal / nullGroup.length : 0;
+				const ticketMedio =
+					nullGroup.length > 0 ? valorTotal / nullGroup.length : 0;
 				const products = getProductBreakdown(nullGroup);
 				const plans = getPlanBreakdown(nullGroup);
 				const tipoBreakdown = getTipoBreakdown(nullGroup);
@@ -266,7 +279,7 @@ export default function VendasContainer() {
 		// Apply search filter if provided
 		if (searchFilter.trim()) {
 			const filter = searchFilter.toLowerCase().trim();
-			return rows.filter(row => {
+			return rows.filter((row) => {
 				const key = row.key?.toString().toLowerCase() || '';
 				return key.includes(filter);
 			});
@@ -280,32 +293,49 @@ export default function VendasContainer() {
 		if (!vendorName || !propostasRaw) return [];
 
 		// Filter propostas for the specific vendor
-		return propostasRaw.filter((p: Proposta) => p.NOME_VENDEDOR === vendorName);
+		return propostasRaw.filter(
+			(p: Proposta) => p.NOME_VENDEDOR === vendorName
+		);
 	};
 
 	// Prepare export data based on current view
 	const exportData = useMemo(() => {
-
 		// For vendor type with plans, create a consolidated structure with one row per vendor
 		if (rankingType === 'vendor') {
 			// Create a map to store vendor data by vendor name
 			const vendorMap = new Map<string, VendorExportData>();
 			// Calculate total value for percentages
-			const totalValue = data.reduce((sum, item) => sum + (item.valorTotal || 0), 0);
-			
-			data.forEach(item => {
-				const vendorName = item.key === null ? 'Não informado' : item.key.toString();
-				
+			const totalValue = data.reduce(
+				(sum, item) => sum + (item.valorTotal || 0),
+				0
+			);
+
+			data.forEach((item) => {
+				const vendorName =
+					item.key === null ? 'Não informado' : item.key.toString();
+
 				// Initialize vendor data if not exists
 				if (!vendorMap.has(vendorName)) {
 					// Calculate value percentage
-					const valorPercentage = totalValue > 0 ? ((item.valorTotal || 0) / totalValue) * 100 : 0;
+					const valorPercentage =
+						totalValue > 0
+							? ((item.valorTotal || 0) / totalValue) * 100
+							: 0;
 					vendorMap.set(vendorName, {
-						'Vendedor': vendorName,
-						'Quantidade': item.qtd,
-						'Percentual': `${item.percent.toFixed(2)}%`,
-						'Valor Total': `${item.valorTotal?.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) || 'R$ 0,00'} (${valorPercentage.toFixed(2)}%)`,
-						'Ticket Médio': item.ticketMedio?.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) || 'R$ 0,00',
+						Vendedor: vendorName,
+						Quantidade: item.qtd,
+						Percentual: `${item.percent.toFixed(2)}%`,
+						'Valor Total': `${
+							item.valorTotal?.toLocaleString('pt-BR', {
+								style: 'currency',
+								currency: 'BRL',
+							}) || 'R$ 0,00'
+						} (${valorPercentage.toFixed(2)}%)`,
+						'Ticket Médio':
+							item.ticketMedio?.toLocaleString('pt-BR', {
+								style: 'currency',
+								currency: 'BRL',
+							}) || 'R$ 0,00',
 					});
 				}
 
@@ -313,9 +343,11 @@ export default function VendasContainer() {
 
 				// Add status columns with both quantity and percentage
 				if (item.plans && item.plans.length > 0) {
-					item.plans.forEach(plan => {
+					item.plans.forEach((plan) => {
 						const statusName = plan.plan || 'Não informado';
-						vendorData[statusName] = `${plan.qtd} (${plan.percent.toFixed(2)}%)`;
+						vendorData[statusName] = `${
+							plan.qtd
+						} (${plan.percent.toFixed(2)}%)`;
 					});
 				}
 			});
@@ -323,14 +355,17 @@ export default function VendasContainer() {
 			return Array.from(vendorMap.values());
 		} else {
 			// For city and model types, use the original format
-			return data.map(item => ({
-				[rankingTypeLabels[rankingType]]: item.key === null ? 'Não informado' : item.key,
+			return data.map((item) => ({
+				[rankingTypeLabels[rankingType]]:
+					item.key === null ? 'Não informado' : item.key,
 				Quantidade: item.qtd,
 				Percentual: `${item.percent.toFixed(2)}%`,
-				...(rankingType === 'city' ? {
-					'População': item.population || '-',
-					'Med. 12': item.med12 || '-'
-				} : {})
+				...(rankingType === 'city'
+					? {
+							População: item.population || '-',
+							'Med. 12': item.med12 || '-',
+					  }
+					: {}),
 			}));
 		}
 	}, [data, rankingType]);
@@ -340,8 +375,8 @@ export default function VendasContainer() {
 		if (rankingType === 'vendor') {
 			// Get all unique keys from the export data to create dynamic headers
 			const allKeys = new Set<string>();
-			exportData.forEach(item => {
-				Object.keys(item).forEach(key => allKeys.add(key));
+			exportData.forEach((item) => {
+				Object.keys(item).forEach((key) => allKeys.add(key));
 			});
 
 			// Create headers in a specific order
@@ -357,27 +392,24 @@ export default function VendasContainer() {
 
 			// Add plan headers - now just using the plan name directly
 			const planHeaders = Array.from(allKeys)
-				.filter(key => !baseHeaders.some(header => header.key === key))
-				.filter(key => !['Vendedor', 'Quantidade', 'Percentual', 'Valor Total', 'Ticket Médio', 'NOVA', 'REPOSICAO'].includes(key))
-				.map(key => ({ label: key, key }));
+				.filter(
+					(key) => !baseHeaders.some((header) => header.key === key)
+				)
+				.filter(
+					(key) =>
+						![
+							'Vendedor',
+							'Quantidade',
+							'Percentual',
+							'Valor Total',
+							'Ticket Médio',
+							'NOVA',
+							'REPOSICAO',
+						].includes(key)
+				)
+				.map((key) => ({ label: key, key }));
 
 			return [...baseHeaders, ...planHeaders];
-		} else {
-			// Original headers for city and model
-			const baseHeaders = [
-				{ label: rankingTypeLabels[rankingType], key: rankingTypeLabels[rankingType] },
-				{ label: 'Quantidade', key: 'Quantidade' },
-				{ label: 'Percentual', key: 'Percentual' },
-			];
-
-			if (rankingType === 'city') {
-				baseHeaders.push(
-					{ label: 'População', key: 'População' },
-					{ label: 'Med. 12', key: 'Med. 12' }
-				);
-			}
-
-			return baseHeaders;
 		}
 	}, [rankingType, exportData]);
 
@@ -401,6 +433,10 @@ export default function VendasContainer() {
 		propostasRaw,
 		getVendorData,
 		exportData,
-		exportHeaders
+		exportHeaders,
+		lojas,
+		selectedLoja,
+		setSelectedLoja,
+		displayLoja,
 	};
 }

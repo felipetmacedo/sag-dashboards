@@ -1,7 +1,7 @@
 import { Download, BarChart3, LineChart, Users, FileText } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-
+import { useState } from 'react';
 import {
 	Card,
 	CardContent,
@@ -13,10 +13,13 @@ import {
 import { Button } from '@/components/ui/button';
 import { exportToCsv } from '@/utils/export-to-csv';
 import { exportToPdf } from '@/utils/export-to-pdf';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 
 import RelatoriosContainer from './Relatorios.container';
 
 export default function Relatorios() {
+	const [open, setOpen] = useState(false);
 	const {
 		isLoading,
 		currentMonthName,
@@ -29,6 +32,10 @@ export default function Relatorios() {
 		monthlySalesHeaders,
 		monthlySalesByVendorReport,
 		monthlySalesByVendorHeaders,
+		lojas,
+		selectedLoja,
+		displayLoja,
+		setSelectedLoja,
 	} = RelatoriosContainer();
 
 	// Export daily sales report
@@ -126,10 +133,63 @@ export default function Relatorios() {
 	return (
 		<div className="p-4">
 			<div className="mb-6">
-				<div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
-					<h1 className="text-2xl font-bold text-apollo-gray-dark flex items-center gap-2">
-						<BarChart3 className="inline-block" /> Relatórios
-					</h1>
+				<div className="flex items-center justify-between mb-2 gap-4 md:flex-row flex-col">
+					<Collapsible open={open} onOpenChange={setOpen}>
+						<div className="flex items-center gap-2 relative">
+							<BarChart3 className="inline-block" />
+							<CollapsibleTrigger asChild>
+								<button className="text-2xl font-bold text-apollo-gray-dark flex items-center gap-2 hover:underline focus:outline-none">
+									Relatórios - {displayLoja}
+									{open ? (
+										<ChevronUp size={18} />
+									) : (
+										<ChevronDown size={18} />
+									)}
+								</button>
+							</CollapsibleTrigger>
+						</div>
+						<CollapsibleContent className="z-10 relative">
+							<div className="absolute left-0 right-0 md:right-auto md:w-[340px] z-10 bg-white rounded shadow p-2 border">
+								<ul className="space-y-1">
+									<li>
+										<button
+											className={`w-full text-left px-2 py-1 rounded ${
+												!selectedLoja
+													? 'bg-purple-100 font-semibold'
+													: 'hover:bg-gray-100'
+											}`}
+											onClick={() => {
+												setSelectedLoja(null);
+												setOpen(false);
+											}}
+										>
+											Todas as Lojas
+										</button>
+									</li>
+									{lojas?.map((loja) => (
+										<li key={loja.token_whatsapp}>
+											<button
+												className={`w-full text-left px-2 py-1 rounded ${
+													selectedLoja ===
+													loja.token_whatsapp
+														? 'bg-purple-100 font-semibold'
+														: 'hover:bg-gray-100'
+												}`}
+												onClick={() => {
+													setSelectedLoja(
+														loja.token_whatsapp
+													);
+													setOpen(false);
+												}}
+											>
+												{loja.empresa}
+											</button>
+										</li>
+									))}
+								</ul>
+							</div>
+						</CollapsibleContent>
+					</Collapsible>
 				</div>
 			</div>
 

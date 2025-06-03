@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { fetchPropostas } from '@/processes/propostas';
 import type { Proposta } from '@/types/proposta';
+import { useLojasStore } from '@/stores/lojas.store';
 
 export default function useDashboardContainer() {
 	const [startDate, setStartDate] = useState(() => {
@@ -12,6 +13,9 @@ export default function useDashboardContainer() {
 		const now = new Date();
 		return new Date(now.getFullYear(), now.getMonth() + 1, 0);
 	});
+
+	const lojas = useLojasStore(state => state.lojas);
+	const [selectedLoja, setSelectedLoja] = useState<string | null>(null);
 
 	const {
 		data: propostasRaw,
@@ -24,11 +28,13 @@ export default function useDashboardContainer() {
 			'propostas',
 			startDate.toISOString().slice(0, 10),
 			endDate.toISOString().slice(0, 10),
+			selectedLoja,
 		],
 		queryFn: () =>
 			fetchPropostas({
 				DT_INICIO: startDate.toISOString().slice(0, 10),
 				DT_FINAL: endDate.toISOString().slice(0, 10),
+				tokens: selectedLoja ? [selectedLoja] : undefined,
 			}),
 		refetchOnWindowFocus: false,
 	});
@@ -38,13 +44,16 @@ export default function useDashboardContainer() {
 
 	// Calculate total number of proposals and total revenue in the filtered period
 	const { totalPropostas, totalFaturamento } = useMemo(() => {
-		const filteredPropostas = propostas.filter((p: Proposta) => p.DT_BORDERO);
+		const filteredPropostas = propostas.filter((p: Proposta) => {
+			const tokenMatch = selectedLoja ? p.TOKEN === selectedLoja : true;
+			return p.DT_BORDERO && tokenMatch;
+		});
 		const total = filteredPropostas.length;
 		const faturamento = filteredPropostas.reduce((sum: number, p: Proposta) => {
 			return sum + (Number(p.VALOR_CREDITO_BASE) || 0);
 		}, 0);
 		return { totalPropostas: total, totalFaturamento: faturamento };
-	}, [propostas]);
+	}, [propostas, selectedLoja]);
 
 	const {
 		data: propostasLastTwoYearsRaw,
@@ -69,7 +78,10 @@ export default function useDashboardContainer() {
 		const start = startDate.toISOString().slice(0, 10);
 		const end = endDate.toISOString().slice(0, 10);
 		const filtered = propostas.filter(
-			(p: Proposta) => p.DT_BORDERO >= start && p.DT_BORDERO <= end
+			(p: Proposta) => {
+				const tokenMatch = selectedLoja ? p.TOKEN === selectedLoja : true;
+				return p.DT_BORDERO >= start && p.DT_BORDERO <= end && tokenMatch;
+			}
 		);
 		const total = filtered.length;
 		const counts = filtered.reduce(
@@ -94,14 +106,17 @@ export default function useDashboardContainer() {
 				perc: total ? Math.round((counts.REPOSICAO / total) * 100) : 0,
 			},
 		];
-	}, [startDate, endDate, propostas]);
+	}, [startDate, endDate, propostas, selectedLoja]);
 
 	// Memoized chart data
 	const productPie = useMemo(() => {
 		const start = startDate.toISOString().slice(0, 10);
 		const end = endDate.toISOString().slice(0, 10);
 		const filtered = propostas.filter(
-			(p: Proposta) => p.DT_BORDERO >= start && p.DT_BORDERO <= end
+			(p: Proposta) => {
+				const tokenMatch = selectedLoja ? p.TOKEN === selectedLoja : true;
+				return p.DT_BORDERO >= start && p.DT_BORDERO <= end && tokenMatch;
+			}
 		);
 		const grouped: Record<string, number> = {};
 		filtered.forEach((p: Proposta) => {
@@ -113,7 +128,7 @@ export default function useDashboardContainer() {
 			name,
 			sales,
 		}));
-	}, [startDate, endDate, propostas]);
+	}, [startDate, endDate, propostas, selectedLoja]);
 
 		// Aggregate last two years by month/year for the bar chart
 	const propostasLastTwoYearsChart = useMemo(() => {
@@ -127,6 +142,8 @@ export default function useDashboardContainer() {
 			return { month, [prevYear]: 0, [currentYear]: 0 };
 		});
 		propostasLastTwoYears.forEach((p: Proposta) => {
+			const tokenMatch = selectedLoja ? p.TOKEN === selectedLoja : true;
+			if (!tokenMatch) return;
 			const date = new Date(p.DT_BORDERO);
 			if (isNaN(date.getTime())) return;
 			const year = date.getFullYear();
@@ -136,7 +153,7 @@ export default function useDashboardContainer() {
 			}
 		});
 		return chartData;
-	}, [propostasLastTwoYears]);
+	}, [propostasLastTwoYears, selectedLoja]);
 
 	return {
 		startDate,
@@ -157,5 +174,8 @@ export default function useDashboardContainer() {
 		errorLastTwoYears,
 		isErrorCurrent,
 		isErrorLastTwoYears,
+		lojas,
+		selectedLoja,
+		setSelectedLoja,
 	};
 }

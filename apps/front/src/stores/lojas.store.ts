@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-interface Loja {
+export interface Loja {
 	codhda: string;
 	empresa: string;
 	token_whatsapp: string;

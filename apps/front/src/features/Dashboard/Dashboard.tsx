@@ -1,6 +1,8 @@
 'use client';
-
+import { useState } from 'react';
 import useDashboardContainer from './Dashboard.container';
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import { DatePicker } from '@/components/ui/date-picker';
 import {
 	PieChart,
@@ -32,8 +34,14 @@ export default function DashboardPage() {
 		totalFaturamento,
 		errorCurrent,
 		errorLastTwoYears,
+		lojas,
+		selectedLoja,
+		setSelectedLoja,
 	} = useDashboardContainer();
 
+	const [open, setOpen] = useState(false);
+	const selectedLojaObj = lojas?.find(l => l.token_whatsapp === selectedLoja);
+	const displayLoja = selectedLojaObj ? selectedLojaObj.empresa : 'Todas as Lojas';
 	// Color palette for charts
 	const PIE_COLORS = [
 		'#ff6384',
@@ -52,10 +60,42 @@ export default function DashboardPage() {
 
 	return (
 		<div className="flex flex-col gap-8 p-8 w-full min-h-screen">
-			<div className="flex items-center justify-between mb-2 gap-2">
-				<h1 className="text-2xl font-bold text-apollo-gray-dark flex items-center gap-2">
-					<LayoutDashboard className="inline-block" /> Dashboard
-				</h1>
+			<div className="flex items-center justify-between mb-2 gap-4 md:flex-row flex-col">
+				<Collapsible open={open} onOpenChange={setOpen}>
+					<div className="flex items-center gap-2 relative">
+						<LayoutDashboard className="inline-block" />
+						<CollapsibleTrigger asChild>
+							<button className="text-2xl font-bold text-apollo-gray-dark flex items-center gap-2 hover:underline focus:outline-none">
+								Dashboard - {displayLoja}
+								{open ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+							</button>
+						</CollapsibleTrigger>
+					</div>
+					<CollapsibleContent className="z-10 relative">
+						<div className="absolute left-0 right-0 md:right-auto md:w-[340px] z-10 bg-white rounded shadow p-2 border">
+							<ul className="space-y-1">
+								<li>
+									<button
+										className={`w-full text-left px-2 py-1 rounded ${!selectedLoja ? 'bg-purple-100 font-semibold' : 'hover:bg-gray-100'}`}
+										onClick={() => { setSelectedLoja(null); setOpen(false); }}
+									>
+										Todas as Lojas
+									</button>
+								</li>
+								{lojas?.map(loja => (
+									<li key={loja.token_whatsapp}>
+										<button
+											className={`w-full text-left px-2 py-1 rounded ${selectedLoja === loja.token_whatsapp ? 'bg-purple-100 font-semibold' : 'hover:bg-gray-100'}`}
+											onClick={() => { setSelectedLoja(loja.token_whatsapp); setOpen(false); }}
+										>
+											{loja.empresa}
+										</button>
+									</li>
+								))}
+							</ul>
+						</div>
+					</CollapsibleContent>
+				</Collapsible>
 				<div className="flex gap-4">
 					<div className="w-46">
 						<DatePicker
@@ -64,13 +104,10 @@ export default function DashboardPage() {
 								if (date) {
 									const newStartDate = new Date(date);
 									setStartDate(newStartDate);
-									
 									// Check if the new range exceeds 2 years
 									if (endDate) {
 										const twoYearsFromStart = new Date(newStartDate);
 										twoYearsFromStart.setFullYear(twoYearsFromStart.getFullYear() + 2);
-										
-										// If end date is more than 2 years from start date, adjust end date
 										if (endDate > twoYearsFromStart) {
 											setEndDate(twoYearsFromStart);
 										}
