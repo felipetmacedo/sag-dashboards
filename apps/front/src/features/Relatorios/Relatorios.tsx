@@ -57,6 +57,7 @@ export default function Relatorios() {
 			filename: `venda_diaria_${format(new Date(), 'MMM-yyyy', {
 				locale: ptBR,
 			})}`,
+			showHtml: true,
 			title: 'Relatório de Venda Diária',
 			subtitle: `${currentMonthName}`,
 		});
@@ -85,6 +86,7 @@ export default function Relatorios() {
 				'MMM-yyyy',
 				{ locale: ptBR }
 			)}`,
+			showHtml: true,
 			title: 'Relatório de Venda Diária por Vendedor',
 			subtitle: `${currentMonthName}`,
 		});
@@ -107,6 +109,7 @@ export default function Relatorios() {
 			filename: `venda_mensal_${currentYearDisplay}`,
 			title: 'Relatório de Venda Mensal',
 			subtitle: `${currentYearDisplay}`,
+			showHtml: true,
 		});
 	};
 
@@ -127,6 +130,7 @@ export default function Relatorios() {
 			filename: `venda_mensal_por_vendedor_${currentYearDisplay}`,
 			title: 'Relatório de Venda Mensal por Vendedor',
 			subtitle: `${currentYearDisplay}`,
+			showHtml: true,
 		});
 	};
 
