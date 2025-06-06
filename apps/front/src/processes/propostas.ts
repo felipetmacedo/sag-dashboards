@@ -30,6 +30,8 @@ export async function fetchPropostas({
 		}
 	);
 
+	console.log(response.data[0].propostas)
+
 	if (!response.data[0].propostas) {
 		toast.error('Erro ao buscar propostas');
 		return [];

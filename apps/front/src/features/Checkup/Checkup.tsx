@@ -96,7 +96,7 @@ export default function Checkup() {
 		// Base columns for all ranking types
 		const baseColumns: ColumnDef<RankingRow & Partial<Proposta>>[] = [
 			{
-				accessorKey: 'COD_PLANO',
+				accessorKey: 'codhda',
 				header: ({ column }) => (
 					<div>
 						<Button
@@ -119,7 +119,8 @@ export default function Checkup() {
 					</div>
 				),
 				cell: ({ row }) => {
-					const value = row.getValue('COD_PLANO');
+					const value = row.getValue('codhda');
+					console.log(value);
 					return (
 						<div className="font-medium">
 							{value === null ? 'Não informado' : value}
@@ -140,7 +141,7 @@ export default function Checkup() {
 							}
 							className="px-0 font-medium text-xs"
 						>
-							Num_proposta+dig_proposta
+							Proposta
 							{column.getIsSorted() &&
 								(column.getIsSorted() === 'asc' ? (
 									<ChevronUp className="ml-2 h-4 w-4" />
@@ -151,11 +152,15 @@ export default function Checkup() {
 					</div>
 				),
 				cell: ({ row }) => {
-					const numProposta = row.original.NUM_PROPOSTA as string | undefined;
-					const digProposta = row.original.DIG_PROPOSTA as string | undefined;
+					const numProposta = row.original.NUM_PROPOSTA as
+						| string
+						| undefined;
+					const digProposta = row.original.DIG_PROPOSTA as
+						| string
+						| undefined;
 					return (
 						<div className="font-medium">
-							{numProposta || '-'}{digProposta || ''}
+							{numProposta} - {digProposta}
 						</div>
 					);
 				},
@@ -248,13 +253,26 @@ export default function Checkup() {
 					</div>
 				),
 				cell: ({ row }) => {
-					const numGrupo = row.original.NUM_GRUPO as string | null | undefined;
-					const numCota = row.original.NUM_COTA as string | null | undefined;
-					const repCota = row.original.REP_COTA as string | null | undefined;
-					const digCota = row.original.DIG_COTA as string | null | undefined;
+					const numGrupo = row.original.NUM_GRUPO as
+						| string
+						| null
+						| undefined;
+					const numCota = row.original.NUM_COTA as
+						| string
+						| null
+						| undefined;
+					const repCota = row.original.REP_COTA as
+						| string
+						| null
+						| undefined;
+					const digCota = row.original.DIG_COTA as
+						| string
+						| null
+						| undefined;
 					return (
 						<div className="font-medium">
-							{numGrupo || '-'}/{numCota || '-'}/{repCota || '-'}/{digCota || '-'}
+							{numGrupo || '-'}/{numCota || '-'}/{repCota || '-'}/
+							{digCota || '-'}
 						</div>
 					);
 				},
@@ -515,17 +533,9 @@ export default function Checkup() {
 					<div className="flex flex-col md:flex-row gap-4">
 						<div className="w-full md:w-1/3">
 							<label className="text-sm font-medium mb-1 block">
-								{rankingTypeLabels[rankingType]}
+								Valor
 							</label>
-							<Input
-								placeholder={`Buscar por ${rankingTypeLabels[
-									rankingType
-								].toLowerCase()}...`}
-								value={searchFilter}
-								onChange={(e) =>
-									setSearchFilter(e.target.value)
-								}
-							/>
+							<Input placeholder={'Buscar por qualquer campo'} />
 						</div>
 
 						<div className="w-full md:w-1/3">

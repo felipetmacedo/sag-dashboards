@@ -119,18 +119,13 @@ export default function CheckupContainer() {
 		if (searchFilter.trim()) {
 			const filter = searchFilter.toLowerCase().trim();
 			return rows.filter((row) => {
-				// Search across multiple fields
-				const searchableFields = [
-					row.NOME_VENDEDOR,
-					row.NOMECONSORCIADO,
-					row.NUM_PROPOSTA,
-					row.STATUS,
-					row.NOME_PLANO,
-					row.CPF_VENDEDOR,
-					row.CPFCNPCONSORCIADO
-				].filter(Boolean).map(field => field?.toString().toLowerCase() || '');
-				
-				return searchableFields.some(field => field.includes(filter));
+				// Search across all fields in the proposta object
+				return Object.values(row)
+					.filter(value => value !== null && value !== undefined)
+					.some(value => {
+						const stringValue = String(value).toLowerCase();
+						return stringValue.includes(filter);
+					});
 			});
 		}
 
