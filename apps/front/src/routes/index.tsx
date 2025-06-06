@@ -7,6 +7,7 @@ import Dashboard from "@/features/Dashboard"
 import Ranking from "@/features/Ranking";
 import Vendas from "@/features/Vendas";
 import Relatorios from "@/features/Relatorios";
+import Checkup from "@/features/Checkup";
 
 export const router = createBrowserRouter([
     {
@@ -37,6 +38,10 @@ export const router = createBrowserRouter([
             {
                 path: "vendas",
                 element: <Vendas />
+            },
+            {
+                path: "checkup",
+                element: <Checkup />
             },
             {
                 path: "relatorios",
