@@ -535,7 +535,11 @@ export default function Checkup() {
 							<label className="text-sm font-medium mb-1 block">
 								Valor
 							</label>
-							<Input placeholder={'Buscar por qualquer campo'} />
+							<Input 
+								placeholder={'Buscar por qualquer campo'} 
+								value={searchFilter}
+								onChange={(e) => setSearchFilter(e.target.value)}
+							/>
 						</div>
 
 						<div className="w-full md:w-1/3">
@@ -557,6 +561,18 @@ export default function Checkup() {
 								onChange={handleEndDateChange}
 							/>
 						</div>
+					</div>
+				</CardContent>
+			</Card>
+
+			<Card className="mb-6">
+				<CardHeader className="pb-3">
+					<CardTitle>Resumo</CardTitle>
+				</CardHeader>
+				<CardContent>
+					<div className="flex items-center gap-2">
+						<div className="text-4xl font-bold">{data.length}</div>
+						<div className="text-muted-foreground">Propostas no período</div>
 					</div>
 				</CardContent>
 			</Card>
