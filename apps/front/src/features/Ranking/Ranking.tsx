@@ -244,6 +244,42 @@ export default function Ranking() {
 			// Add valor total, ticket médio, etc.
 			baseColumns.push(
 				{
+					accessorKey: 'nomeVendedor',
+					header: ({ column }) => (
+						<div className="text-xs px-0">
+							<Button
+								variant="ghost"
+								onClick={() =>
+									column.toggleSorting(
+										column.getIsSorted() === 'asc'
+									)
+								}
+								className="px-0 font-medium justify-end w-full text-xs"
+							>
+								Nome vendedor
+								{column.getIsSorted() &&
+									(column.getIsSorted() === 'asc' ? (
+										<ChevronUp className="ml-2 h-4 w-4" />
+									) : (
+										<ChevronDown className="ml-2 h-4 w-4" />
+									))}
+							</Button>
+						</div>
+					),
+					cell: ({ row }) => {
+						const value = row.getValue<string | undefined>(
+							'nomeVendedor'
+						);
+						return (
+							<div className="text-right">
+								{value !== undefined
+									? value
+									: '-'}
+							</div>
+						);
+					},
+				},
+				{
 					accessorKey: 'valorTotal',
 					header: ({ column }) => (
 						<div className="text-xs px-0">

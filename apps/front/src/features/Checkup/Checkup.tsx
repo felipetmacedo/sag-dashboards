@@ -1,5 +1,5 @@
 import { useMemo, useState, useCallback } from 'react';
-import { Download, ChevronUp, ChevronDown, TestTube } from 'lucide-react';
+import { Download, ChevronUp, ChevronDown, List } from 'lucide-react';
 import {
 	Table,
 	TableBody,
@@ -460,10 +460,10 @@ export default function Checkup() {
 				<div className="flex items-center justify-between mb-2 gap-4 md:flex-row flex-col">
 					<Collapsible open={open} onOpenChange={setOpen}>
 						<div className="flex items-center gap-2 relative">
-							<TestTube className="inline-block" />
+							<List className="inline-block" />
 							<CollapsibleTrigger asChild>
 								<button className="text-2xl font-bold text-apollo-gray-dark flex items-center gap-2 hover:underline focus:outline-none">
-									Checkup de dados - {displayLoja}
+									Todas Propostas - {displayLoja}
 									{open ? (
 										<ChevronUp size={18} />
 									) : (

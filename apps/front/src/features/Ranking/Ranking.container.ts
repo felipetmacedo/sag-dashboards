@@ -54,7 +54,7 @@ export interface VendorExportData {
 
 // Define which Proposta keys are used for each ranking type
 const keyMap: { [type in RankingType]: keyof Proposta } = {
-	vendor: 'NOME_VENDEDOR',
+	vendor: 'CPF_VENDEDOR',
 	model: 'CODIGOMODELO', // Updated to use CODIGOMODELO as requested
 	city: 'CIDADE_LOG',
 };
@@ -290,7 +290,7 @@ export default function useRanking() {
 		if (!vendorName || !propostasRaw) return [];
 
 		// Filter propostas for the specific vendor
-		return propostasRaw.filter((p: Proposta) => p.NOME_VENDEDOR === vendorName);
+		return propostasRaw.filter((p: Proposta) => p.CPF_VENDEDOR === vendorName);
 	};
 
 	// Prepare export data based on current view
