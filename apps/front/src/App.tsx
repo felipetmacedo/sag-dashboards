@@ -17,7 +17,7 @@ function App() {
 
 	return (
 		<>
-			<div className="flex h-screen overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:none]">
+			<div className="flex h-screen overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:none] bg-background">
 				<SideBar>
 					<main className="flex-1 p-4 overflow-y-auto">
 						<Outlet />

@@ -91,12 +91,12 @@ export default function SideBar({ children }: { children: React.ReactNode }) {
 	return (
 		<div
 			className={cn(
-				'flex flex-col md:flex-row dark:bg-neutral-800 w-full flex-1 mx-auto border border-neutral-200 dark:border-neutral-700 overflow-hidden',
+				'flex flex-col md:flex-row dark:bg-neutral-800 w-full flex-1 mx-auto border border-neutral-200 overflow-hidden',
 				'h-screen w-screen'
 			)}
 		>
 			<Sidebar open={open} setOpen={setOpen}>
-				<SidebarBody className="justify-between gap-10">
+				<SidebarBody className="justify-between gap-10 bg-secondary">
 					<div className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
 						<div className="relative h-6">
 							<motion.div
