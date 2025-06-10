@@ -218,23 +218,17 @@ export const exportToPdf = ({
 			contentDiv.id = 'pdf-dialog-content';
 			contentDiv.innerHTML = htmlContent;
 
-			// Footer with download button
-			const dialogFooter = document.createElement('div');
-			dialogFooter.className =
-				'flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 mt-4';
-
+			// Download button at the top with full width
 			const downloadButton = document.createElement('button');
 			downloadButton.className =
-				'inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2';
+				'w-full inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2';
 			downloadButton.textContent = 'Baixar PDF';
-
-			dialogFooter.appendChild(downloadButton);
 
 			// Assemble the dialog
 			dialogContent.appendChild(closeButton);
 			dialogContent.appendChild(dialogHeader);
+			dialogContent.appendChild(downloadButton);
 			dialogContent.appendChild(contentDiv);
-			dialogContent.appendChild(dialogFooter);
 
 			// Create a root element for our dialog
 			const dialogRoot = document.createElement('div');
@@ -270,15 +264,44 @@ export const exportToPdf = ({
 						(imgProps.height * pdfWidth) / imgProps.width;
 					const xOffset = (pageWidth - pdfWidth) / 2; // Center horizontally
 
-					// Add the image centered on the page
+					// Calculate available height for content
+					const pageHeight = pdf.internal.pageSize.getHeight();
+					const availableHeight = pageHeight - 20; // 10mm margin on top and bottom
+
+					// Add the image across multiple pages if needed
+					let heightLeft = pdfHeight;
+					let position = 10; // Starting position (10mm from top)
+					let page = 1;
+
+					// Add first page
 					pdf.addImage(
 						imgData,
 						'PNG',
 						xOffset,
-						10,
+						position,
 						pdfWidth,
-						pdfHeight
+						Math.min(availableHeight, pdfHeight)
 					);
+					heightLeft -= availableHeight;
+
+					// Add additional pages if needed
+					while (heightLeft > 0) {
+						position = 10; // Reset position to top of new page
+						pdf.addPage();
+						page++;
+
+						pdf.addImage(
+							imgData,
+							'PNG',
+							xOffset,
+							position - (page - 1) * availableHeight,
+							pdfWidth,
+							pdfHeight
+						);
+
+						heightLeft -= availableHeight;
+					}
+
 					pdf.save(`${filename}.pdf`);
 
 					toast.success('PDF gerado com sucesso', {
