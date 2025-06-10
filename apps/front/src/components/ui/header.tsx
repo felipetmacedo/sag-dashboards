@@ -13,7 +13,7 @@ export function Header() {
 				</div>
 
 				<div className="hidden lg:flex lg:flex-1 lg:justify-end">
-					<Button asChild variant="default">
+					<Button asChild variant="default" className="bg-primary">
 						<Link to="/login">Acessar dashboards</Link>
 					</Button>
 				</div>

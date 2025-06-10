@@ -1,6 +1,7 @@
 import { useLojasStore } from '@/stores/lojas.store';
 import { toast } from 'sonner';
 import axios from 'axios';
+import { Proposta } from '@/types/proposta';
 
 export async function fetchPropostas({
 	DT_INICIO,
@@ -36,6 +37,10 @@ export async function fetchPropostas({
 		toast.error('Erro ao buscar propostas');
 		return [];
 	}
+
+	response.data[0].propostas.forEach((proposta: Proposta) => {
+		proposta.NOME_VENDEDOR = proposta?.NOME_VENDEDOR?.trim().split(' ').slice(0, 3).join(' ') || null;
+	});
 
 	return response.data[0].propostas;
 }

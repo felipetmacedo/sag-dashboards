@@ -109,7 +109,7 @@ export default function CheckupContainer() {
 			return {
 				...proposta,
 				// We can keep some of the old fields for compatibility
-				key: proposta.ID.toString(),
+				key: proposta?.ID?.toString(),
 				qtd: 1,
 				percent: 100 / propostasRaw.length
 			};
