@@ -8,7 +8,8 @@ import {
 	BarChart3,
 	FileSpreadsheet,
 	Banknote,
-	List
+	List,
+	Store,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -28,7 +29,7 @@ interface NavLink {
 export default function SideBar({ children }: { children: React.ReactNode }) {
 	const navigate = useNavigate();
 	const [open, setOpen] = useState(true);
-	const { clearLojas } = useLojasStore();
+	const { lojas, clearLojas } = useLojasStore();
 	const queryClient = useQueryClient();
 
 	const handleLogout = async () => {
@@ -143,6 +144,21 @@ export default function SideBar({ children }: { children: React.ReactNode }) {
 							})}
 						</div>
 					</div>
+					{open && lojas && lojas.length > 0 && (
+						<div className="mt-auto pt-4 border-t border-gray-200 dark:border-gray-700">
+							<div className="space-y-1 px-3">
+								{lojas.map((loja) => (
+									<div 
+										key={loja.codhda} 
+										className="flex items-center gap-2 p-2 rounded-md bg-gray-100 dark:bg-gray-800 text-sm font-medium w-full"
+									>
+										<Store className="h-4 w-4 flex-shrink-0" />
+										{open && <span className="truncate">{loja.empresa}</span>}
+									</div>
+								))}
+							</div>
+						</div>
+					)}
 				</SidebarBody>
 			</Sidebar>
 			{children}
