@@ -24,4 +24,3 @@ networks:
 
 volumes:
   letsencrypt:
-
