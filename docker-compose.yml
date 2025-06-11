@@ -7,7 +7,7 @@ services:
       target: builder
     env_file: ./apps/front/.env.production
     networks:
-      - sagdashboard
+      - sagzap
     expose:
       - "5173"
     labels:
@@ -19,5 +19,5 @@ services:
       - "traefik.http.services.dashsag.loadbalancer.server.port=5173"
 
 networks:
-  sagdashboard:
+  sagzap:
     driver: bridge
