@@ -40,7 +40,6 @@ export default function Checkup() {
 		setStartDate,
 		endDate,
 		setEndDate,
-		rankingTypeLabels,
 		exportData,
 		exportHeaders,
 		isLoading,
@@ -60,19 +59,6 @@ export default function Checkup() {
 	const handleEndDateChange = (date: Date | null) => {
 		if (date) setEndDate(date);
 	};
-
-	// Format percentage for display - using useCallback to avoid dependency issues in useMemo
-	const formatPercent = useCallback((value: number) => {
-		return `${value.toFixed(2)}%`;
-	}, []);
-
-	// Format currency for display - using useCallback to avoid dependency issues in useMemo
-	const formatCurrency = useCallback((value: number) => {
-		return value.toLocaleString('pt-BR', {
-			style: 'currency',
-			currency: 'BRL',
-		});
-	}, []);
 
 	// Handle export to CSV
 	const handleExport = () => {
@@ -96,7 +82,7 @@ export default function Checkup() {
 		// Base columns for all ranking types
 		const baseColumns: ColumnDef<RankingRow & Partial<Proposta>>[] = [
 			{
-				accessorKey: 'codhda',
+				accessorKey: 'CODHDA',
 				header: ({ column }) => (
 					<div>
 						<Button
@@ -119,7 +105,7 @@ export default function Checkup() {
 					</div>
 				),
 				cell: ({ row }) => {
-					const value = row.getValue('codhda');
+					const value = row.getValue('CODHDA');
 					console.log(value);
 					return (
 						<div className="font-medium">
@@ -501,7 +487,7 @@ export default function Checkup() {
 												}`}
 												onClick={() => {
 													setSelectedLoja(
-														loja.token_whatsapp
+														loja.codhda
 													);
 													setOpen(false);
 												}}

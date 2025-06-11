@@ -40,7 +40,7 @@ export default function DashboardPage() {
 
 	const [open, setOpen] = useState(false);
 	const selectedLojaObj = lojas?.find(
-		(l) => l.token_whatsapp === selectedLoja
+		(l) => l.codhda === selectedLoja
 	);
 	const displayLoja = selectedLojaObj
 		? selectedLojaObj.empresa
@@ -107,7 +107,7 @@ export default function DashboardPage() {
 											}`}
 											onClick={() => {
 												setSelectedLoja(
-													loja.token_whatsapp
+													loja.codhda
 												);
 												setOpen(false);
 											}}

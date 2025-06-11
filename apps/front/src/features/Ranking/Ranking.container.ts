@@ -157,7 +157,7 @@ export default function useRanking() {
 
 	const displayLoja = useMemo(() => {
 		if (!selectedLoja) return 'Todas as Lojas';
-		const loja = lojas?.find(l => l.token_whatsapp === selectedLoja);
+		const loja = lojas?.find(l => l.codhda === selectedLoja);
 		return loja?.empresa || 'Todas as Lojas';
 	}, [selectedLoja, lojas]);
 
@@ -188,7 +188,7 @@ export default function useRanking() {
 			fetchPropostas({
 				DT_INICIO: startDate.toISOString().slice(0, 10),
 				DT_FINAL: endDate.toISOString().slice(0, 10),
-				tokens: selectedLoja ? [selectedLoja] : undefined
+				codhda: selectedLoja ? [selectedLoja] : undefined
 			}),
 		refetchOnWindowFocus: false,
 	});

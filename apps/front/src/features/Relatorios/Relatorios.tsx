@@ -181,7 +181,7 @@ export default function Relatorios() {
 												}`}
 												onClick={() => {
 													setSelectedLoja(
-														loja.token_whatsapp
+														loja.codhda
 													);
 													setOpen(false);
 												}}

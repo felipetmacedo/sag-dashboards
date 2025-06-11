@@ -6,11 +6,11 @@ import { Proposta } from '@/types/proposta';
 export async function fetchPropostas({
 	DT_INICIO,
 	DT_FINAL,
-	tokens
+	codhda
 }: {
 	DT_INICIO: string;
 	DT_FINAL: string;
-	tokens?: string[];
+	codhda?: string[];
 }) {
 	const lojasStore = useLojasStore.getState();
 	const lojas = lojasStore.lojas;
@@ -20,18 +20,16 @@ export async function fetchPropostas({
 		return [];
 	}
 
-	const lojasTokens = lojas.map((loja) => loja.token_whatsapp);
+	const lojasCodhda = lojas.map((loja) => loja.codhda);
 
 	const response = await axios.post(
 		'https://n8n.48tnew.sagzap.com.br/webhook/propostas',
 		{
 			dataInicial: DT_INICIO,
 			dataFinal: DT_FINAL,
-			tokens: tokens ? tokens : lojasTokens
+			codhda: codhda ? codhda : lojasCodhda
 		}
 	);
-
-	console.log(response.data[0].propostas)
 
 	if (!response.data[0].propostas) {
 		toast.error('Erro ao buscar propostas');

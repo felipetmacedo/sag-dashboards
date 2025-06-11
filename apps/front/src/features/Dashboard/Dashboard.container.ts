@@ -34,7 +34,7 @@ export default function useDashboardContainer() {
 			fetchPropostas({
 				DT_INICIO: startDate.toISOString().slice(0, 10),
 				DT_FINAL: endDate.toISOString().slice(0, 10),
-				tokens: selectedLoja ? [selectedLoja] : undefined,
+				codhda: selectedLoja ? [selectedLoja] : undefined,
 			}),
 		refetchOnWindowFocus: false,
 	});
@@ -45,7 +45,7 @@ export default function useDashboardContainer() {
 	// Calculate total number of proposals and total revenue in the filtered period
 	const { totalPropostas, totalFaturamento } = useMemo(() => {
 		const filteredPropostas = propostas.filter((p: Proposta) => {
-			const tokenMatch = selectedLoja ? p.TOKEN === selectedLoja : true;
+			const tokenMatch = selectedLoja ? p.CODHDA === selectedLoja : true;
 			return p.DT_BORDERO && tokenMatch;
 		});
 		const total = filteredPropostas.length;
@@ -61,7 +61,7 @@ export default function useDashboardContainer() {
 		const end = endDate.toISOString().slice(0, 10);
 		const filtered = propostas.filter(
 			(p: Proposta) => {
-				const tokenMatch = selectedLoja ? p.TOKEN === selectedLoja : true;
+				const tokenMatch = selectedLoja ? p.CODHDA === selectedLoja : true;
 				return p.DT_BORDERO >= start && p.DT_BORDERO <= end && tokenMatch;
 			}
 		);
@@ -96,7 +96,7 @@ export default function useDashboardContainer() {
 		const end = endDate.toISOString().slice(0, 10);
 		const filtered = propostas.filter(
 			(p: Proposta) => {
-				const tokenMatch = selectedLoja ? p.TOKEN === selectedLoja : true;
+				const tokenMatch = selectedLoja ? p.CODHDA === selectedLoja : true;
 				return p.DT_BORDERO >= start && p.DT_BORDERO <= end && tokenMatch;
 			}
 		);
@@ -117,7 +117,7 @@ export default function useDashboardContainer() {
 		const start = startDate.toISOString().slice(0, 10);
 		const end = endDate.toISOString().slice(0, 10);
 		const filtered = propostas.filter((p: Proposta) => {
-			const tokenMatch = selectedLoja ? p.TOKEN === selectedLoja : true;
+			const tokenMatch = selectedLoja ? p.CODHDA === selectedLoja : true;
 			return p.DT_BORDERO >= start && p.DT_BORDERO <= end && tokenMatch;
 		});
 		const grouped: Record<string, number> = {};
@@ -137,7 +137,7 @@ export default function useDashboardContainer() {
 		const start = startDate.toISOString().slice(0, 10);
 		const end = endDate.toISOString().slice(0, 10);
 		const filtered = propostas.filter((p: Proposta) => {
-			const tokenMatch = selectedLoja ? p.TOKEN === selectedLoja : true;
+			const tokenMatch = selectedLoja ? p.CODHDA === selectedLoja : true;
 			return p.DT_BORDERO >= start && p.DT_BORDERO <= end && tokenMatch;
 		});
 		const grouped: Record<string, number> = {};

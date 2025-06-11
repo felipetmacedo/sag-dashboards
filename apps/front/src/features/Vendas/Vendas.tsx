@@ -358,7 +358,7 @@ export default function Vendas() {
 												}`}
 												onClick={() => {
 													setSelectedLoja(
-														loja.token_whatsapp
+														loja.codhda
 													);
 													setOpen(false);
 												}}

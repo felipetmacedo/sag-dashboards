@@ -70,7 +70,7 @@ export default function RelatoriosContainer() {
 
 	const displayLoja = useMemo(() => {
 		if (!selectedLoja) return 'Todas as Lojas';
-		const loja = lojas?.find((l) => l.token_whatsapp === selectedLoja);
+		const loja = lojas?.find((l) => l.codhda === selectedLoja);
 		return loja?.empresa || 'Todas as Lojas';
 	}, [selectedLoja, lojas]);
 
@@ -85,7 +85,7 @@ export default function RelatoriosContainer() {
 			fetchPropostas({
 				DT_INICIO: yearStart.toISOString().slice(0, 10),
 				DT_FINAL: yearEnd.toISOString().slice(0, 10),
-				tokens: selectedLoja ? [selectedLoja] : undefined,
+				codhda: selectedLoja ? [selectedLoja] : undefined,
 			}),
 		refetchOnWindowFocus: false,
 	});

@@ -464,7 +464,7 @@ export default function Ranking() {
 	});
 
 	const [open, setOpen] = useState(false);
-	const selectedLojaObj = lojas?.find(l => l.token_whatsapp === selectedLoja);
+	const selectedLojaObj = lojas?.find(l => l.codhda === selectedLoja);
 	const displayLoja = selectedLojaObj ? selectedLojaObj.empresa : 'Todas as Lojas';
 
 	return (
@@ -514,7 +514,7 @@ export default function Ranking() {
 												}`}
 												onClick={() => {
 													setSelectedLoja(
-														loja.token_whatsapp
+														loja.codhda
 													);
 													setOpen(false);
 												}}

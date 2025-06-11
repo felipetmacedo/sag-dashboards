@@ -2,7 +2,7 @@ export interface Proposta {
 	ID: number;
 	COD_PLANO: string | null;
 	TOKEN: string;
-	codhda: string | null;
+	CODHDA: string | null;
 	COD_CONCESS: string | null;
 	NUM_PROPOSTA: string;
 	DIG_PROPOSTA: string;
