@@ -55,24 +55,6 @@ export default function useDashboardContainer() {
 		return { totalPropostas: total, totalFaturamento: faturamento };
 	}, [propostas, selectedLoja]);
 
-	const {
-		data: propostasLastTwoYearsRaw,
-		isLoading: loadingLastTwoYears,
-		refetch: refetchLastTwoYears,
-		error: errorLastTwoYears,
-		isError: isErrorLastTwoYears,
-	} = useQuery({
-		queryKey: ['propostasLastTwoYears'],
-		queryFn: () => fetchPropostas({
-			DT_INICIO: (() => { const d = new Date(); d.setFullYear(d.getFullYear() - 2); return d.toISOString().slice(0, 10); })(),
-			DT_FINAL: new Date().toISOString().slice(0, 10),
-		}),
-		refetchOnWindowFocus: false,
-	});
-
-	// Ensure propostasLastTwoYears is always an array
-	const propostasLastTwoYears = useMemo(() => Array.isArray(propostasLastTwoYearsRaw) ? propostasLastTwoYearsRaw : [], [propostasLastTwoYearsRaw]);
-
 	// Selector for Tipo de Proposta (NOVA vs REPOSICAO)
 	const tipoPropostaPie = useMemo(() => {
 		const start = startDate.toISOString().slice(0, 10);
@@ -124,56 +106,68 @@ export default function useDashboardContainer() {
 			if (!plan) return;
 			grouped[plan] = (grouped[plan] || 0) + 1;
 		});
-		return Object.entries(grouped).map(([name, sales]) => ({
-			name,
-			sales,
-		}));
+		return Object.entries(grouped)
+			.map(([name, sales]) => ({ name, sales }))
+			.sort((a, b) => b.sales - a.sales)
+			.slice(0, 5);
 	}, [startDate, endDate, propostas, selectedLoja]);
 
-		// Aggregate last two years by month/year for the bar chart
-	const propostasLastTwoYearsChart = useMemo(() => {
-		if (!Array.isArray(propostasLastTwoYears)) return [];
-		const now = new Date();
-		const currentYear = now.getFullYear();
-		const prevYear = currentYear - 1;
-		// Initialize chart data for all 12 months
-		const chartData = Array.from({ length: 12 }, (_, i) => {
-			const month = String(i + 1).padStart(2, '0');
-			return { month, [prevYear]: 0, [currentYear]: 0 };
-		});
-		propostasLastTwoYears.forEach((p: Proposta) => {
+	// Top 5 Vendors
+	const topVendors = useMemo(() => {
+		const start = startDate.toISOString().slice(0, 10);
+		const end = endDate.toISOString().slice(0, 10);
+		const filtered = propostas.filter((p: Proposta) => {
 			const tokenMatch = selectedLoja ? p.TOKEN === selectedLoja : true;
-			if (!tokenMatch) return;
-			const date = new Date(p.DT_BORDERO);
-			if (isNaN(date.getTime())) return;
-			const year = date.getFullYear();
-			const monthIdx = date.getMonth(); // 0-based
-			if ((year === prevYear || year === currentYear) && monthIdx >= 0 && monthIdx < 12) {
-				chartData[monthIdx][year] = (chartData[monthIdx][year] || 0) + 1;
-			}
+			return p.DT_BORDERO >= start && p.DT_BORDERO <= end && tokenMatch;
 		});
-		return chartData;
-	}, [propostasLastTwoYears, selectedLoja]);
+		const grouped: Record<string, number> = {};
+		filtered.forEach((p: Proposta) => {
+			const vendor = (p.NOME_VENDEDOR || '').trim();
+			if (!vendor) return;
+			grouped[vendor] = (grouped[vendor] || 0) + 1;
+		});
+		return Object.entries(grouped)
+			.map(([name, sales]) => ({ name, sales }))
+			.sort((a, b) => b.sales - a.sales)
+			.slice(0, 5);
+	}, [startDate, endDate, propostas, selectedLoja]);
+
+	// Top 5 Motors
+	const topMotors = useMemo(() => {
+		const start = startDate.toISOString().slice(0, 10);
+		const end = endDate.toISOString().slice(0, 10);
+		const filtered = propostas.filter((p: Proposta) => {
+			const tokenMatch = selectedLoja ? p.TOKEN === selectedLoja : true;
+			return p.DT_BORDERO >= start && p.DT_BORDERO <= end && tokenMatch;
+		});
+		const grouped: Record<string, number> = {};
+		filtered.forEach((p: Proposta) => {
+			const motor = (p.CODIGOMODELO || '').trim();
+			if (!motor) return;
+			grouped[motor] = (grouped[motor] || 0) + 1;
+		});
+		return Object.entries(grouped)
+			.map(([name, sales]) => ({ name, sales }))
+			.sort((a, b) => b.sales - a.sales)
+			.slice(0, 5);
+	}, [startDate, endDate, propostas, selectedLoja]);
 
 	return {
 		startDate,
 		setStartDate,
 		endDate,
 		setEndDate,
-		loading: loadingCurrent || loadingLastTwoYears,
+		loading: loadingCurrent,
 		propostas,
-		propostasLastTwoYears,
-		propostasLastTwoYearsChart,
 		productPie,
 		tipoPropostaPie,
 		totalPropostas,
 		totalFaturamento,
+		topVendors,
+		topMotors,
 		refetchCurrent,
-		refetchLastTwoYears,
 		errorCurrent,
-		errorLastTwoYears,
 		isErrorCurrent,
-		isErrorLastTwoYears,
 		lojas,
 		selectedLoja,
 		setSelectedLoja,

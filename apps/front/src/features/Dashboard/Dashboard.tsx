@@ -10,12 +10,7 @@ import {
 	Cell,
 	Tooltip,
 	ResponsiveContainer,
-	BarChart,
-	Bar,
-	XAxis,
-	YAxis,
 	Legend,
-	LabelList,
 } from 'recharts';
 import { LayoutDashboard } from 'lucide-react';
 import { format } from 'date-fns';
@@ -29,11 +24,11 @@ export default function DashboardPage() {
 		loading,
 		productPie,
 		tipoPropostaPie,
-		propostasLastTwoYearsChart,
 		totalPropostas,
 		totalFaturamento,
+		topVendors,
+		topMotors,
 		errorCurrent,
-		errorLastTwoYears,
 		lojas,
 		selectedLoja,
 		setSelectedLoja,
@@ -155,6 +150,13 @@ export default function DashboardPage() {
 							<div className="h-8 bg-gray-200 rounded w-1/3"></div>
 						</div>
 					</div>
+					{/* Skeleton loading for top 5 cards */}
+					<div className="grid grid-cols-1 gap-8 mb-8">
+						<div className="bg-white p-6 rounded shadow animate-pulse border-t-4 border-yellow-400">
+							<div className="h-6 bg-gray-200 rounded w-1/2 mb-4"></div>
+							<div className="h-8 bg-gray-200 rounded w-1/3"></div>
+						</div>
+					</div>
 					{/* Skeleton loading for charts */}
 					<div className="grid grid-cols-2 gap-8">
 						{/* Skeleton for first chart */}
@@ -169,14 +171,8 @@ export default function DashboardPage() {
 						</div>
 					</div>
 
-					{/* Skeleton loading for bottom chart */}
-					<div className="bg-white rounded-sm shadow-xl p-6 border-t-4 border-purple-400">
-						<div className="h-6 bg-gray-200 rounded w-1/3 mb-4 animate-pulse"></div>
-						<div className="h-80 bg-gray-100 rounded animate-pulse"></div>
-					</div>
-
 					{/* Error message if needed */}
-					{errorCurrent || errorLastTwoYears ? (
+					{errorCurrent ? (
 						<div className="bg-white p-6 rounded-lg shadow-sm">
 							<p className="text-red-600">
 								Erro ao carregar dados:{' '}
@@ -217,6 +213,52 @@ export default function DashboardPage() {
 								a {format(endDate, 'dd/MM/yyyy')}
 							</p>
 						</div>
+					</div>
+
+					{/* Top 5 Table - Clean UI with separators */}
+					<div className="overflow-x-auto mb-8">
+					  <table className="min-w-full bg-white rounded shadow border-t-4 border-yellow-400">
+					    <thead>
+					      <tr>
+					        <th className="py-3 px-4 text-left text-blue-700 font-bold border-b border-purple-200">Vendedor</th>
+					        <th className="py-3 px-4 text-left text-green-700 font-bold border-b border-purple-200 border-l">Motos</th>
+					        <th className="py-3 px-4 text-left text-purple-700 font-bold border-b border-purple-200 border-l">Plano</th>
+					      </tr>
+					    </thead>
+					    <tbody>
+					      {[0,1,2,3,4].map(idx => (
+					        <tr key={idx} className="border-b border-purple-100 last:border-b-0">
+					          <td className="py-2 px-4 align-middle">
+					            {topVendors[idx] ? (
+					              <div className="flex items-center gap-2">
+					                <span className="font-bold text-blue-600 w-6 text-right">{idx + 1}.</span>
+					                <span className="flex-1 truncate">{topVendors[idx].name}</span>
+					                <span className="ml-2 font-semibold text-blue-700 tabular-nums">{topVendors[idx].sales}</span>
+					              </div>
+					            ) : <span className="text-gray-300">-</span>}
+					          </td>
+					          <td className="py-2 px-4 align-middle border-l border-purple-100">
+					            {topMotors[idx] ? (
+					              <div className="flex items-center gap-2">
+					                <span className="font-bold text-green-600 w-6 text-right">{idx + 1}.</span>
+					                <span className="flex-1 truncate">{topMotors[idx].name}</span>
+					                <span className="ml-2 font-semibold text-green-700 tabular-nums">{topMotors[idx].sales}</span>
+					              </div>
+					            ) : <span className="text-gray-300">-</span>}
+					          </td>
+					          <td className="py-2 px-4 align-middle border-l border-purple-100">
+					            {productPie[idx] ? (
+					              <div className="flex items-center gap-2">
+					                <span className="font-bold text-purple-600 w-6 text-right">{idx + 1}.</span>
+					                <span className="flex-1 truncate">{productPie[idx].name}</span>
+					                <span className="ml-2 font-semibold text-purple-700 tabular-nums">{productPie[idx].sales}</span>
+					              </div>
+					            ) : <span className="text-gray-300">-</span>}
+					          </td>
+					        </tr>
+					      ))}
+					    </tbody>
+					  </table>
 					</div>
 
 					{/* Top row - 2 column grid for pie charts */}
@@ -350,82 +392,7 @@ export default function DashboardPage() {
 						</div>
 					</div>
 
-					{/* Bottom row - Full width bar chart */}
-					<div className="bg-white rounded-sm shadow-xl p-6 border-t-4 border-purple-400">
-						<h2 className="text-xl font-bold mb-2 text-purple-600 tracking-tight">
-							Comparativo de Vendas (Últimos 2 anos)
-						</h2>
-						<ResponsiveContainer width="100%" height={340}>
-							<BarChart
-								data={propostasLastTwoYearsChart}
-								margin={{
-									top: 20,
-									right: 30,
-									left: 0,
-									bottom: 5,
-								}}
-								barGap={4}
-							>
-								<XAxis
-									dataKey="month"
-									tick={{ fontWeight: 600, fill: '#7c3aed' }}
-									label={{
-										value: 'Mês',
-										position: 'insideBottom',
-										offset: -2,
-									}}
-								/>
-								<YAxis
-									tick={{ fontWeight: 600, fill: '#7c3aed' }}
-								/>
-								<Tooltip
-									formatter={(
-										value: number,
-										name: string
-									) => [`${value} vendas`, name]}
-									labelFormatter={(label) => `Mês: ${label}`}
-								/>
-								<Legend />
-								{/* Stacked bars for each year, using distinct colors and a slight shadow for 3D effect */}
-								{Object.keys(
-									propostasLastTwoYearsChart[0] || {}
-								)
-									.filter((key) => key !== 'month')
-									.map((year, idx) => (
-										<Bar
-											key={year}
-											dataKey={year}
-											stackId="a"
-											name={year}
-											fill={
-												[
-													'#a78bfa',
-													'#36a2eb',
-													'#ff6384',
-													'#ffcd56',
-													'#4bc0c0',
-												][idx % 5]
-											}
-											barSize={24}
-											style={{
-												filter: 'drop-shadow(1px 2px 2px rgba(80,80,80,0.10))',
-											}}
-										>
-											<LabelList
-												dataKey={year}
-												position="center"
-												fontSize={11}
-												fill="#ffffff"
-												fontWeight="bold"
-												formatter={(value: number) =>
-													value > 0 ? value : ''
-												}
-											/>
-										</Bar>
-									))}
-							</BarChart>
-						</ResponsiveContainer>
-					</div>
+					
 				</div>
 			)}
 		</div>
