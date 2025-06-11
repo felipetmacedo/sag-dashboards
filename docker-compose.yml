@@ -15,9 +15,13 @@ services:
       - "traefik.http.routers.dashsag.rule=Host(`dashsag.sagzap.com.br`)"
       - "traefik.http.routers.dashsag.entrypoints=websecure"
       - "traefik.http.routers.dashsag.tls=true"
-      - "traefik.http.routers.dashsag.tls.certresolver=letsencryptresolver"
+      - "traefik.http.routers.dashsag.tls.certresolver=letsencrypt"
       - "traefik.http.services.dashsag.loadbalancer.server.port=5173"
 
 networks:
   sagzap:
     driver: bridge
+
+volumes:
+  letsencrypt:
+
