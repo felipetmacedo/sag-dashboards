@@ -1,7 +1,11 @@
 'use client';
 import { useState } from 'react';
 import useDashboardContainer from './Dashboard.container';
-import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
+import {
+	Collapsible,
+	CollapsibleTrigger,
+	CollapsibleContent,
+} from '@/components/ui/collapsible';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { DatePicker } from '@/components/ui/date-picker';
 import {
@@ -35,8 +39,12 @@ export default function DashboardPage() {
 	} = useDashboardContainer();
 
 	const [open, setOpen] = useState(false);
-	const selectedLojaObj = lojas?.find(l => l.token_whatsapp === selectedLoja);
-	const displayLoja = selectedLojaObj ? selectedLojaObj.empresa : 'Todas as Lojas';
+	const selectedLojaObj = lojas?.find(
+		(l) => l.token_whatsapp === selectedLoja
+	);
+	const displayLoja = selectedLojaObj
+		? selectedLojaObj.empresa
+		: 'Todas as Lojas';
 	// Color palette for charts
 	const PIE_COLORS = [
 		'#ff6384',
@@ -62,7 +70,11 @@ export default function DashboardPage() {
 						<CollapsibleTrigger asChild>
 							<button className="text-2xl font-bold text-apollo-gray-dark flex items-center gap-2 hover:underline focus:outline-none">
 								Dashboard - {displayLoja}
-								{open ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+								{open ? (
+									<ChevronUp size={18} />
+								) : (
+									<ChevronDown size={18} />
+								)}
 							</button>
 						</CollapsibleTrigger>
 					</div>
@@ -71,17 +83,34 @@ export default function DashboardPage() {
 							<ul className="space-y-1">
 								<li>
 									<button
-										className={`w-full text-left px-2 py-1 rounded ${!selectedLoja ? 'bg-purple-100 font-semibold' : 'hover:bg-gray-100'}`}
-										onClick={() => { setSelectedLoja(null); setOpen(false); }}
+										className={`w-full text-left px-2 py-1 rounded ${
+											!selectedLoja
+												? 'bg-purple-100 font-semibold'
+												: 'hover:bg-gray-100'
+										}`}
+										onClick={() => {
+											setSelectedLoja(null);
+											setOpen(false);
+										}}
 									>
 										Todas as Lojas
 									</button>
 								</li>
-								{lojas?.map(loja => (
+								{lojas?.map((loja) => (
 									<li key={loja.token_whatsapp}>
 										<button
-											className={`w-full text-left px-2 py-1 rounded ${selectedLoja === loja.token_whatsapp ? 'bg-purple-100 font-semibold' : 'hover:bg-gray-100'}`}
-											onClick={() => { setSelectedLoja(loja.token_whatsapp); setOpen(false); }}
+											className={`w-full text-left px-2 py-1 rounded ${
+												selectedLoja ===
+												loja.token_whatsapp
+													? 'bg-purple-100 font-semibold'
+													: 'hover:bg-gray-100'
+											}`}
+											onClick={() => {
+												setSelectedLoja(
+													loja.token_whatsapp
+												);
+												setOpen(false);
+											}}
 										>
 											{loja.empresa}
 										</button>
@@ -101,8 +130,12 @@ export default function DashboardPage() {
 									setStartDate(newStartDate);
 									// Check if the new range exceeds 2 years
 									if (endDate) {
-										const twoYearsFromStart = new Date(newStartDate);
-										twoYearsFromStart.setFullYear(twoYearsFromStart.getFullYear() + 2);
+										const twoYearsFromStart = new Date(
+											newStartDate
+										);
+										twoYearsFromStart.setFullYear(
+											twoYearsFromStart.getFullYear() + 2
+										);
 										if (endDate > twoYearsFromStart) {
 											setEndDate(twoYearsFromStart);
 										}
@@ -119,12 +152,16 @@ export default function DashboardPage() {
 								if (date) {
 									const newEndDate = new Date(date);
 									setEndDate(newEndDate);
-									
+
 									// Check if the new range exceeds 2 years
 									if (startDate) {
-										const twoYearsBeforeEnd = new Date(newEndDate);
-										twoYearsBeforeEnd.setFullYear(twoYearsBeforeEnd.getFullYear() - 2);
-										
+										const twoYearsBeforeEnd = new Date(
+											newEndDate
+										);
+										twoYearsBeforeEnd.setFullYear(
+											twoYearsBeforeEnd.getFullYear() - 2
+										);
+
 										// If start date is more than 2 years before end date, adjust start date
 										if (startDate < twoYearsBeforeEnd) {
 											setStartDate(twoYearsBeforeEnd);
@@ -152,7 +189,7 @@ export default function DashboardPage() {
 					</div>
 					{/* Skeleton loading for top 5 cards */}
 					<div className="grid grid-cols-1 gap-8 mb-8">
-						<div className="bg-white p-6 rounded shadow animate-pulse border-t-4 border-yellow-400">
+						<div className="bg-white p-6 rounded shadow animate-pulse border-t-4 border-yellow-300">
 							<div className="h-6 bg-gray-200 rounded w-1/2 mb-4"></div>
 							<div className="h-8 bg-gray-200 rounded w-1/3"></div>
 						</div>
@@ -217,48 +254,87 @@ export default function DashboardPage() {
 
 					{/* Top 5 Table - Clean UI with separators */}
 					<div className="overflow-x-auto mb-8">
-					  <table className="min-w-full bg-white rounded shadow border-t-4 border-yellow-400">
-					    <thead>
-					      <tr>
-					        <th className="py-3 px-4 text-left text-blue-700 font-bold border-b border-purple-200">Vendedor</th>
-					        <th className="py-3 px-4 text-left text-green-700 font-bold border-b border-purple-200 border-l">Motos</th>
-					        <th className="py-3 px-4 text-left text-purple-700 font-bold border-b border-purple-200 border-l">Plano</th>
-					      </tr>
-					    </thead>
-					    <tbody>
-					      {[0,1,2,3,4].map(idx => (
-					        <tr key={idx} className="border-b border-purple-100 last:border-b-0">
-					          <td className="py-2 px-4 align-middle">
-					            {topVendors[idx] ? (
-					              <div className="flex items-center gap-2">
-					                <span className="font-bold text-blue-600 w-6 text-right">{idx + 1}.</span>
-					                <span className="flex-1 truncate">{topVendors[idx].name}</span>
-					                <span className="ml-2 font-semibold text-blue-700 tabular-nums">{topVendors[idx].sales}</span>
-					              </div>
-					            ) : <span className="text-gray-300">-</span>}
-					          </td>
-					          <td className="py-2 px-4 align-middle border-l border-purple-100">
-					            {topMotors[idx] ? (
-					              <div className="flex items-center gap-2">
-					                <span className="font-bold text-green-600 w-6 text-right">{idx + 1}.</span>
-					                <span className="flex-1 truncate">{topMotors[idx].name}</span>
-					                <span className="ml-2 font-semibold text-green-700 tabular-nums">{topMotors[idx].sales}</span>
-					              </div>
-					            ) : <span className="text-gray-300">-</span>}
-					          </td>
-					          <td className="py-2 px-4 align-middle border-l border-purple-100">
-					            {productPie[idx] ? (
-					              <div className="flex items-center gap-2">
-					                <span className="font-bold text-purple-600 w-6 text-right">{idx + 1}.</span>
-					                <span className="flex-1 truncate">{productPie[idx].name}</span>
-					                <span className="ml-2 font-semibold text-purple-700 tabular-nums">{productPie[idx].sales}</span>
-					              </div>
-					            ) : <span className="text-gray-300">-</span>}
-					          </td>
-					        </tr>
-					      ))}
-					    </tbody>
-					  </table>
+						<table className="min-w-full bg-white rounded shadow border-t-4 border-yellow-300">
+							<thead>
+								<tr>
+									<th className="py-3 px-4 text-left  font-bold border-b border-purple-200">
+										TOP 5 Vendedores
+									</th>
+									<th className="py-3 px-4 text-left font-bold border-b border-purple-200 border-l">
+										TOP 5 Motos
+									</th>
+									<th className="py-3 px-4 text-left font-bold border-b border-purple-200 border-l">
+										TOP 5 Planos
+									</th>
+								</tr>
+							</thead>
+							<tbody>
+								{[0, 1, 2, 3, 4].map((idx) => (
+									<tr
+										key={idx}
+										className="border-b border-purple-100 last:border-b-0"
+									>
+										<td className="py-2 px-4 align-middle">
+											{topVendors[idx] ? (
+												<div className="flex items-center gap-2">
+													<span className="font-bold w-6 text-right">
+														{idx + 1}.
+													</span>
+													<span className="flex-1 truncate">
+														{topVendors[idx].name}
+													</span>
+													<span className="ml-2 font-semibold tabular-nums">
+														{topVendors[idx].sales}
+													</span>
+												</div>
+											) : (
+												<span className="text-gray-300">
+													-
+												</span>
+											)}
+										</td>
+										<td className="py-2 px-4 align-middle border-l border-purple-100">
+											{topMotors[idx] ? (
+												<div className="flex items-center gap-2">
+													<span className="font-bold w-6 text-right">
+														{idx + 1}.
+													</span>
+													<span className="flex-1 truncate">
+														{topMotors[idx].name}
+													</span>
+													<span className="ml-2 font-semibold tabular-nums">
+														{topMotors[idx].sales}
+													</span>
+												</div>
+											) : (
+												<span className="text-gray-300">
+													-
+												</span>
+											)}
+										</td>
+										<td className="py-2 px-4 align-middle border-l border-purple-100">
+											{productPie[idx] ? (
+												<div className="flex items-center gap-2">
+													<span className="font-bold w-6 text-right">
+														{idx + 1}.
+													</span>
+													<span className="flex-1 truncate">
+														{productPie[idx].name}
+													</span>
+													<span className="ml-2 font-semibold tabular-nums">
+														{productPie[idx].sales}
+													</span>
+												</div>
+											) : (
+												<span className="text-gray-300">
+													-
+												</span>
+											)}
+										</td>
+									</tr>
+								))}
+							</tbody>
+						</table>
 					</div>
 
 					{/* Top row - 2 column grid for pie charts */}
@@ -391,8 +467,6 @@ export default function DashboardPage() {
 							</div>
 						</div>
 					</div>
-
-					
 				</div>
 			)}
 		</div>
