@@ -8,6 +8,8 @@ services:
     env_file: ./apps/front/.env.production
     networks:
       - sagzap
+    volumes:
+      - ./apps/front/public:/app/public
     expose:
       - "5173"
     labels:
@@ -20,7 +22,7 @@ services:
 
 networks:
   sagzap:
-    driver: bridge
+    external: true
 
 volumes:
   letsencrypt:
