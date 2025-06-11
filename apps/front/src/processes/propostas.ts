@@ -23,7 +23,7 @@ export async function fetchPropostas({
 	const lojasTokens = lojas.map((loja) => loja.token_whatsapp);
 
 	const response = await axios.post(
-		'https://webhook.n8n.sagzap.com.br/webhook/propostas',
+		'https://n8n.48tnew.sagzap.com.br/webhook/propostas',
 		{
 			dataInicial: DT_INICIO,
 			dataFinal: DT_FINAL,
