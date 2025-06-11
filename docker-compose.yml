@@ -11,27 +11,6 @@ services:
     expose:
       - "5173"
 
-  caddy:
-    build:
-      context: ./apps/caddy
-      dockerfile: Dockerfile
-    environment:
-      - DOMAIN_NAME=dashboard.sagzap.com.br
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - caddy_data:/data
-      - caddy_config:/config
-    networks:
-      - sagdashboard
-    depends_on:
-      - front
-
-volumes:
-  caddy_data:
-  caddy_config:
-
 networks:
   sagdashboard:
     driver: bridge
