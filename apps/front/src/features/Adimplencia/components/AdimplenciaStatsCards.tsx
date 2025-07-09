@@ -1,9 +1,32 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TrendingUp, CheckCircle, Clock, DollarSign } from 'lucide-react';
 
+interface AdimplenciaDataItem {
+	parcela: string;
+	totalPropostas: number;
+	totalPago: number;
+	totalPendente: number;
+	[nome: string]: any; // for any extra fields, if needed
+}
+
+interface AdimplenciaStats {
+	totalPropostas: number;
+	totalPago: number;
+	totalPendente: number;
+	percentualAdimplencia: number;
+}
+
+interface ParcelaStats {
+	parcela: string;
+	totalPropostas: number;
+	totalPago: number;
+	totalPendente: number;
+	percentualAdimplencia: number;
+}
+
 interface AdimplenciaStatsCardsProps {
-	stats: any;
-	data: any[];
+	stats: AdimplenciaStats;
+	data: AdimplenciaDataItem[];
 	isLoading?: boolean;
 	selectedParcelas?: string[];
 }
@@ -53,11 +76,11 @@ export const AdimplenciaStatsCards = ({
 	};
 
 	const shouldShowParcelaStats = () => {
-		return selectedParcelas.length > 1 && data.length > 0;
+		return selectedParcelas.length > 0 && data.length > 0;
 	};
 
-	const parcelaStats = shouldShowParcelaStats() ? getParcelaStats() : [];
-	const hasMultipleParcelas = parcelaStats.length > 1;
+	const parcelaStats: ParcelaStats[] = shouldShowParcelaStats() ? getParcelaStats() : [];
+	// removed unused hasMultipleParcelas
 
 	if (isLoading) {
 		return (
@@ -154,46 +177,41 @@ export const AdimplenciaStatsCards = ({
 			</div>
 
 			{/* Estatísticas por parcela */}
-			{hasMultipleParcelas && (
+			{parcelaStats.length > 0 && (
 				<div className="mt-6">
 					<Card>
 						<CardHeader>
 							<CardTitle>Estatísticas por Parcela</CardTitle>
 						</CardHeader>
 						<CardContent>
-							<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-								{parcelaStats.map((parcela: any) => (
-									<div
-										key={parcela.parcela}
-										className="flex flex-col items-center"
-									>
-										<div className="text-lg font-semibold">
-											{parcela.parcela}ª Parcela
-										</div>
-										<div className="text-2xl font-bold">
-											{formatNumber(
-												parcela.totalPropostas
-											)}
-										</div>
-										<div className="text-green-600">
-											Pago:{' '}
-											{formatNumber(parcela.totalPago)}
-										</div>
-										<div className="text-yellow-600">
-											Pendente:{' '}
-											{formatNumber(
-												parcela.totalPendente
-											)}
-										</div>
-										<div className="text-blue-600">
-											Adimplência:{' '}
-											{formatPercentage(
-												parcela.percentualAdimplencia
-											)}
-										</div>
-									</div>
-								))}
-							</div>
+							<table className="w-full">
+								<thead>
+									<tr>
+										<th>Parcela</th>
+										<th>Propostas</th>
+										<th>Pagas</th>
+										<th>Pendentes</th>
+										<th>% Adimplência</th>
+									</tr>
+								</thead>
+								<tbody>
+									{parcelaStats.map((parcela: ParcelaStats) => (
+										<tr key={parcela.parcela}>
+											<td>{parcela.parcela}ª Parcela</td>
+											<td>{formatNumber(parcela.totalPropostas)}</td>
+											<td className="text-green-600">
+												{formatNumber(parcela.totalPago)}
+											</td>
+											<td className="text-red-600">
+												{formatNumber(parcela.totalPendente)}
+											</td>
+											<td className="font-bold">
+												{formatPercentage(parcela.percentualAdimplencia)}
+											</td>
+										</tr>
+									))}
+								</tbody>
+							</table>
 						</CardContent>
 					</Card>
 				</div>

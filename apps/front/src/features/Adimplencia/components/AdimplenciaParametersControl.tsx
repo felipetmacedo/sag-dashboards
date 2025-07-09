@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Loader2 } from 'lucide-react';
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
+import { MultiSelect } from '@/components/multi-select';
 import { DatePicker } from '@/components/ui/date-picker';
 
 interface AdimplenciaParametersControlProps {
@@ -10,8 +10,8 @@ interface AdimplenciaParametersControlProps {
   setStartDate: (date: Date | null) => void;
   endDate: Date;
   setEndDate: (date: Date | null) => void;
-  selectedParcela: string | null;
-  setSelectedParcela: (parcela: string | null) => void;
+  selectedParcelas: string[];
+  setSelectedParcelas: (parcelas: string[]) => void;
   availableParcelas: string[];
   searchFilter: string;
   setSearchFilter: (val: string) => void;
@@ -24,8 +24,8 @@ export const AdimplenciaParametersControl = ({
   setStartDate,
   endDate,
   setEndDate,
-  selectedParcela,
-  setSelectedParcela,
+  selectedParcelas,
+  setSelectedParcelas,
   searchFilter,
   setSearchFilter,
   availableParcelas,
@@ -54,23 +54,15 @@ export const AdimplenciaParametersControl = ({
           </div>
           <div>
             <Label className="mb-1 block">Filtro por Parcela</Label>
-            <Select
-              value={selectedParcela ?? 'all'}
-              onValueChange={val => setSelectedParcela(val === 'all' ? null : val)}
-              disabled={isLoading}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Todas as Parcelas" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todas as Parcelas</SelectItem>
-                {availableParcelas.map((p: string) => (
-                  <SelectItem key={p} value={p}>
-                    {p}ª Parcela
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="w-full">
+              <MultiSelect
+                options={availableParcelas.map(p => ({ label: p, value: p }))}
+                defaultValue={selectedParcelas}
+                onValueChange={setSelectedParcelas}
+                placeholder="Selecione parcelas"
+                disabled={isLoading}
+              />
+            </div>
           </div>
           <div className="flex flex-col md:flex-row gap-4 w-full">
             <div className="w-full">

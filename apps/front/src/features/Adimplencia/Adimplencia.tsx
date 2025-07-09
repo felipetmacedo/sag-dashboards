@@ -12,6 +12,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Download, ChevronUp, ChevronDown, List, TrendingUp } from 'lucide-react';
 import { exportToCsv } from '@/utils/export-to-csv';
+import { exportAdimplenciaPdf } from '@/utils/adimplencia-pdf';
 
 const Adimplencia: React.FC = () => {
 	const {
@@ -25,8 +26,8 @@ const Adimplencia: React.FC = () => {
 		lojas,
 		selectedLoja,
 		setSelectedLoja,
-		selectedParcela,
-		setSelectedParcela,
+		selectedParcelas,
+		setSelectedParcelas,
 		availableParcelas,
 		searchFilter,
 		setSearchFilter,
@@ -38,6 +39,37 @@ const Adimplencia: React.FC = () => {
 	const displayLoja = selectedLoja
 		? lojas?.find((l) => l.codhda === selectedLoja)?.empresa || selectedLoja
 		: 'Todas as Lojas';
+
+	// PDF Export handler
+	const handleExportPdf = async () => {
+		if (!data || data.length === 0) return;
+		// Prepare per-parcela summary (grouped by parcela)
+		const parcelasSummaryMap = new Map<string, { totalPropostas: number; totalPago: number; totalPendente: number; }>();
+		data.forEach(item => {
+			if (!parcelasSummaryMap.has(item.parcela)) {
+				parcelasSummaryMap.set(item.parcela, { totalPropostas: 0, totalPago: 0, totalPendente: 0 });
+			}
+			const s = parcelasSummaryMap.get(item.parcela)!;
+			s.totalPropostas += item.totalPropostas || 0;
+			s.totalPago += item.totalPago || 0;
+			s.totalPendente += item.totalPendente || 0;
+		});
+		const parcelasSummary = Array.from(parcelasSummaryMap.entries()).map(([parcela, s]) => ({
+			parcela,
+			totalPropostas: s.totalPropostas,
+			totalPago: s.totalPago,
+			totalPendente: s.totalPendente,
+			percentualAdimplencia: s.totalPropostas > 0 ? (s.totalPago / s.totalPropostas) * 100 : 0,
+		}));
+		const period = `${startDate ? new Date(startDate).toLocaleDateString('pt-BR') : ''} - ${endDate ? new Date(endDate).toLocaleDateString('pt-BR') : ''}`;
+		await exportAdimplenciaPdf({
+			loja: displayLoja,
+			period,
+			selectedParcelas,
+			parcelasSummary,
+			exportDate: '2025-07-09 10:25',
+		});
+	};
 
 	// Export CSV handler
 	const handleExport = () => {
@@ -140,8 +172,8 @@ const Adimplencia: React.FC = () => {
 					setStartDate={date => { if (date) setStartDate(date); }}
 					endDate={endDate}
 					setEndDate={date => { if (date) setEndDate(date); }}
-					selectedParcela={selectedParcela}
-					setSelectedParcela={setSelectedParcela}
+					selectedParcelas={selectedParcelas}
+					setSelectedParcelas={setSelectedParcelas}
 					availableParcelas={availableParcelas}
 					searchFilter={searchFilter}
 					setSearchFilter={setSearchFilter}

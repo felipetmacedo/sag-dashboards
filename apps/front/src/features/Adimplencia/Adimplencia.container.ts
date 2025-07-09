@@ -22,7 +22,7 @@ export default function useAdimplenciaContainer() {
 	const [endDate, setEndDate] = useState<Date>(endOfMonth(currentDate));
 	const lojas = useLojasStore((state) => state.lojas);
 	const [selectedLoja, setSelectedLoja] = useState<string | null>(null);
-	const [selectedParcela, setSelectedParcela] = useState<string | null>(null);
+	const [selectedParcelas, setSelectedParcelas] = useState<string[]>([]);
 	const [searchFilter, setSearchFilter] = useState<string>('');
 
 	const {
@@ -62,8 +62,8 @@ export default function useAdimplenciaContainer() {
 	const filteredData = useMemo(() => {
 		if (!adimplenciaRaw) return [];
 		return adimplenciaRaw.filter((item) => {
-			// Filter by parcela if selected
-			if (selectedParcela && item.parcela !== selectedParcela)
+			// Filter by parcelas if any are selected
+			if (selectedParcelas.length > 0 && !selectedParcelas.includes(item.parcela))
 				return false;
 			// Filter by search
 			if (!searchFilter) return true;
@@ -73,7 +73,7 @@ export default function useAdimplenciaContainer() {
 				String(item.cpfVendedor ?? '').includes(searchFilter)
 			);
 		});
-	}, [adimplenciaRaw, selectedParcela, searchFilter]);
+	}, [adimplenciaRaw, selectedParcelas, searchFilter]);
 
 	const stats = useMemo(() => {
 		if (!filteredData.length) {
@@ -117,8 +117,8 @@ export default function useAdimplenciaContainer() {
 		lojas,
 		selectedLoja,
 		setSelectedLoja,
-		selectedParcela,
-		setSelectedParcela,
+		selectedParcelas,
+		setSelectedParcelas,
 		availableParcelas,
 		searchFilter,
 		setSearchFilter,

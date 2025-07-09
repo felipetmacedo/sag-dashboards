@@ -1,6 +1,9 @@
 'use client';
 import { useState } from 'react';
 import useDashboardContainer from './Dashboard.container';
+import { exportDashboardPdf } from '@/utils/dashboard-pdf';
+import { Download } from 'lucide-react';
+import { toast } from 'sonner';
 import {
 	Collapsible,
 	CollapsibleTrigger,
@@ -18,6 +21,7 @@ import {
 } from 'recharts';
 import { LayoutDashboard } from 'lucide-react';
 import { format } from 'date-fns';
+import { Button } from '@/components/ui/button';
 
 export default function DashboardPage() {
 	const {
@@ -39,9 +43,47 @@ export default function DashboardPage() {
 	} = useDashboardContainer();
 
 	const [open, setOpen] = useState(false);
-	const selectedLojaObj = lojas?.find(
-		(l) => l.codhda === selectedLoja
-	);
+	const [exporting, setExporting] = useState(false);
+
+	const handleExportPdf = async () => {
+		try {
+			setExporting(true);
+
+			// Prepare data for the PDF utility
+			const period = `${format(startDate, 'dd/MM/yyyy')} a ${format(
+				endDate,
+				'dd/MM/yyyy'
+			)}`;
+			// Map productPie to topPlanos for compatibility
+			const topPlanos = productPie
+				.slice(0, 5)
+				.map((p) => ({ name: p.name, sales: p.sales }));
+			await exportDashboardPdf(
+				{
+					loja: displayLoja,
+					period,
+					totalPropostas,
+					totalFaturamento,
+					topVendors,
+					topMotors,
+					topPlanos,
+					tipoPropostaPie,
+					productPie,
+				},
+				`dashboard_${displayLoja}_${format(
+					startDate,
+					'yyyyMMdd'
+				)}_${format(endDate, 'yyyyMMdd')}.pdf`
+			);
+			toast.success('PDF exportado com sucesso!');
+		} catch (err) {
+			console.error(err);
+			toast.error('Erro ao exportar PDF');
+		} finally {
+			setExporting(false);
+		}
+	};
+	const selectedLojaObj = lojas?.find((l) => l.codhda === selectedLoja);
 	const displayLoja = selectedLojaObj
 		? selectedLojaObj.empresa
 		: 'Todas as Lojas';
@@ -106,9 +148,7 @@ export default function DashboardPage() {
 													: 'hover:bg-gray-100'
 											}`}
 											onClick={() => {
-												setSelectedLoja(
-													loja.codhda
-												);
+												setSelectedLoja(loja.codhda);
 												setOpen(false);
 											}}
 										>
@@ -172,6 +212,16 @@ export default function DashboardPage() {
 							placeholder="Data final"
 						/>
 					</div>
+					<Button
+						onClick={handleExportPdf}
+						disabled={exporting}
+						variant="outline"
+						className="flex items-center gap-2 bg-purple-200 hover:bg-purple-300"
+						style={{ minWidth: 180 }}
+					>
+						<Download size={16} />
+						{exporting ? 'Exportando...' : 'Exportar PDF'}
+					</Button>
 				</div>
 			</div>
 			{loading ? (
