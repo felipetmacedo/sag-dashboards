@@ -1,7 +1,7 @@
 'use client';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import useDashboardContainer from './Dashboard.container';
-import { exportDashboardPdf } from '@/utils/dashboard-pdf';
+import { useReactToPrint } from 'react-to-print';
 import { Download } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -44,38 +44,14 @@ export default function DashboardPage() {
 
 	const [open, setOpen] = useState(false);
 	const [exporting, setExporting] = useState(false);
+	const contentRef = useRef<HTMLDivElement>(null);
+	const reactToPrintFn = useReactToPrint({ contentRef });
 
 	const handleExportPdf = async () => {
 		try {
 			setExporting(true);
 
-			// Prepare data for the PDF utility
-			const period = `${format(startDate, 'dd/MM/yyyy')} a ${format(
-				endDate,
-				'dd/MM/yyyy'
-			)}`;
-			// Map productPie to topPlanos for compatibility
-			const topPlanos = productPie
-				.slice(0, 5)
-				.map((p) => ({ name: p.name, sales: p.sales }));
-			await exportDashboardPdf(
-				{
-					loja: displayLoja,
-					period,
-					totalPropostas,
-					totalFaturamento,
-					topVendors,
-					topMotors,
-					topPlanos,
-					tipoPropostaPie,
-					productPie,
-				},
-				`dashboard_${displayLoja}_${format(
-					startDate,
-					'yyyyMMdd'
-				)}_${format(endDate, 'yyyyMMdd')}.pdf`
-			);
-			toast.success('PDF exportado com sucesso!');
+			reactToPrintFn();
 		} catch (err) {
 			console.error(err);
 			toast.error('Erro ao exportar PDF');
@@ -104,7 +80,7 @@ export default function DashboardPage() {
 	const endDateString = endDate ? endDate.toISOString() : null;
 
 	return (
-		<div className="flex flex-col gap-8 p-8 w-full min-h-screen">
+		<div className="flex flex-col gap-8 p-8 w-full min-h-screen print-content" ref={contentRef}>
 			<div className="flex items-center justify-between mb-2 gap-4 md:flex-row flex-col">
 				<Collapsible open={open} onOpenChange={setOpen}>
 					<div className="flex items-center gap-2 relative">
@@ -116,7 +92,7 @@ export default function DashboardPage() {
 									<ChevronUp size={18} />
 								) : (
 									<ChevronDown size={18} />
-								)}
+								)} 
 							</button>
 						</CollapsibleTrigger>
 					</div>
@@ -272,28 +248,13 @@ export default function DashboardPage() {
 			) : (
 				<div className="space-y-8">
 					{/* Top row - 2 column grid for summary cards */}
-					<div className="grid grid-cols-1 gap-8 mb-8 md:grid-cols-2">
+					<div className="grid grid-cols-1 gap-8 mb-8 md:grid-cols-1">
 						<div className="bg-white p-6 rounded-sm shadow-md border-t-4 border-purple-400">
 							<h2 className="text-lg font-semibold text-gray-700 mb-2">
 								Total de Propostas
 							</h2>
 							<p className="text-3xl font-bold text-purple-600">
 								{totalPropostas.toLocaleString('pt-BR')}
-							</p>
-							<p className="text-sm text-gray-500 mt-2">
-								No período de {format(startDate, 'dd/MM/yyyy')}{' '}
-								a {format(endDate, 'dd/MM/yyyy')}
-							</p>
-						</div>
-						<div className="bg-white p-6 rounded-sm shadow-md border-t-4 border-green-400">
-							<h2 className="text-lg font-semibold text-gray-700 mb-2">
-								Total de Faturamento
-							</h2>
-							<p className="text-3xl font-bold text-green-600">
-								{new Intl.NumberFormat('pt-BR', {
-									style: 'currency',
-									currency: 'BRL',
-								}).format(totalFaturamento)}
 							</p>
 							<p className="text-sm text-gray-500 mt-2">
 								No período de {format(startDate, 'dd/MM/yyyy')}{' '}
@@ -308,18 +269,18 @@ export default function DashboardPage() {
 							<thead>
 								<tr>
 									<th className="py-3 px-4 text-left  font-bold border-b border-purple-200">
-										TOP 5 Vendedores
+										TOP 10 Vendedores
 									</th>
 									<th className="py-3 px-4 text-left font-bold border-b border-purple-200 border-l">
-										TOP 5 Motos
+										TOP 10 Motos
 									</th>
 									<th className="py-3 px-4 text-left font-bold border-b border-purple-200 border-l">
-										TOP 5 Planos
+										TOP 10 Planos
 									</th>
 								</tr>
 							</thead>
 							<tbody>
-								{[0, 1, 2, 3, 4].map((idx) => (
+								{[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((idx) => (
 									<tr
 										key={idx}
 										className="border-b border-purple-100 last:border-b-0"

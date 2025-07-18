@@ -1,4 +1,4 @@
-import { useMemo, useState, useCallback } from 'react';
+import { useMemo, useState, useCallback, useRef } from 'react';
 import { Download, ChevronUp, ChevronDown, Banknote } from 'lucide-react';
 import {
 	Table,
@@ -20,7 +20,7 @@ import {
 	SortingState,
 	getSortedRowModel,
 } from '@tanstack/react-table';
-
+import { useReactToPrint } from 'react-to-print';
 import VendasContainer, { RankingRow } from './Vendas.container';
 import { exportToCsv } from '@/utils/export-to-csv';
 import { Input } from '@/components/ui/input';
@@ -50,6 +50,11 @@ export default function Vendas() {
 		setSelectedLoja,
 		displayLoja,
 	} = VendasContainer();
+	const contentRef = useRef<HTMLDivElement>(null);
+	const reactToPrintFn = useReactToPrint({ contentRef });
+	const handleExportPdf = useCallback(() => {
+		reactToPrintFn();
+	}, [reactToPrintFn]);
 
 	// Wrapper functions to handle the type conversion
 	const handleStartDateChange = (date: Date | null) => {
@@ -312,7 +317,7 @@ export default function Vendas() {
 	});
 
 	return (
-		<div className="p-4">
+		<div className="p-4" ref={contentRef}>
 			<div className="mb-6">
 				<div className="flex items-center justify-between mb-2 gap-4 md:flex-row flex-col">
 					<Collapsible open={open} onOpenChange={setOpen}>
@@ -320,7 +325,8 @@ export default function Vendas() {
 							<Banknote className="inline-block" />
 							<CollapsibleTrigger asChild>
 								<button className="text-2xl font-bold text-apollo-gray-dark flex items-center gap-2 hover:underline focus:outline-none">
-									Qualidade Vendas por Vendedor - {displayLoja}
+									Qualidade Vendas por Vendedor -{' '}
+									{displayLoja}
 									{open ? (
 										<ChevronUp size={18} />
 									) : (
@@ -371,14 +377,26 @@ export default function Vendas() {
 							</div>
 						</CollapsibleContent>
 					</Collapsible>
-					<Button
-						variant="outline"
-						className="flex items-center gap-2 bg-green-100"
-						onClick={handleExport}
-					>
-						<Download size={16} />
-						Exportar CSV
-					</Button>
+					<div className="flex gap-4 no-print">
+						<Button
+							variant="outline"
+							className="flex items-center gap-2 bg-green-100"
+							onClick={handleExport}
+							disabled={isLoading || !data || data.length === 0}
+						>
+							<Download size={16} />
+							Exportar CSV
+						</Button>
+						<Button
+							variant="outline"
+							className="flex items-center gap-2 bg-purple-200 hover:bg-purple-300"
+							onClick={handleExportPdf}
+							disabled={isLoading || !data || data.length === 0}
+						>
+							<Download size={16} />
+							Exportar PDF
+						</Button>
+					</div>
 				</div>
 			</div>
 

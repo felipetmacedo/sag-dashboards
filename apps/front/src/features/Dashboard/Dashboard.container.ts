@@ -109,7 +109,7 @@ export default function useDashboardContainer() {
 		return Object.entries(grouped)
 			.map(([name, sales]) => ({ name, sales }))
 			.sort((a, b) => b.sales - a.sales)
-			.slice(0, 5);
+			.slice(0, 10);
 	}, [startDate, endDate, propostas, selectedLoja]);
 
 	// Top 5 Vendors
@@ -129,7 +129,7 @@ export default function useDashboardContainer() {
 		return Object.entries(grouped)
 			.map(([name, sales]) => ({ name, sales }))
 			.sort((a, b) => b.sales - a.sales)
-			.slice(0, 5);
+			.slice(0, 10);
 	}, [startDate, endDate, propostas, selectedLoja]);
 
 	// Top 5 Motors
@@ -149,7 +149,7 @@ export default function useDashboardContainer() {
 		return Object.entries(grouped)
 			.map(([name, sales]) => ({ name, sales }))
 			.sort((a, b) => b.sales - a.sales)
-			.slice(0, 5);
+			.slice(0, 10);
 	}, [startDate, endDate, propostas, selectedLoja]);
 
 	return {

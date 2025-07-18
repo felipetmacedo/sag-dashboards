@@ -1,16 +1,23 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 
 import useAdimplenciaContainer from './Adimplencia.container';
 import { AdimplenciaParametersControl } from './components/AdimplenciaParametersControl';
 import { AdimplenciaStatsCards } from './components/AdimplenciaStatsCards';
 import { AdimplenciaTable } from './components/AdimplenciaTable';
+import { useReactToPrint } from 'react-to-print';
 import {
 	Collapsible,
 	CollapsibleTrigger,
 	CollapsibleContent,
 } from '@/components/ui/collapsible';
 import { Button } from '@/components/ui/button';
-import { Download, ChevronUp, ChevronDown, List, TrendingUp } from 'lucide-react';
+import {
+	Download,
+	ChevronUp,
+	ChevronDown,
+	List,
+	TrendingUp,
+} from 'lucide-react';
 import { exportToCsv } from '@/utils/export-to-csv';
 import { exportAdimplenciaPdf } from '@/utils/adimplencia-pdf';
 
@@ -31,10 +38,12 @@ const Adimplencia: React.FC = () => {
 		availableParcelas,
 		searchFilter,
 		setSearchFilter,
-
 	} = useAdimplenciaContainer();
+	const contentRef = useRef<HTMLDivElement>(null);
+	const reactToPrintFn = useReactToPrint({ contentRef });
 
 	const [open, setOpen] = useState(false);
+
 	// For display, get current loja name or fallback
 	const displayLoja = selectedLoja
 		? lojas?.find((l) => l.codhda === selectedLoja)?.empresa || selectedLoja
@@ -44,24 +53,38 @@ const Adimplencia: React.FC = () => {
 	const handleExportPdf = async () => {
 		if (!data || data.length === 0) return;
 		// Prepare per-parcela summary (grouped by parcela)
-		const parcelasSummaryMap = new Map<string, { totalPropostas: number; totalPago: number; totalPendente: number; }>();
-		data.forEach(item => {
+		const parcelasSummaryMap = new Map<
+			string,
+			{ totalPropostas: number; totalPago: number; totalPendente: number }
+		>();
+		data.forEach((item) => {
 			if (!parcelasSummaryMap.has(item.parcela)) {
-				parcelasSummaryMap.set(item.parcela, { totalPropostas: 0, totalPago: 0, totalPendente: 0 });
+				parcelasSummaryMap.set(item.parcela, {
+					totalPropostas: 0,
+					totalPago: 0,
+					totalPendente: 0,
+				});
 			}
 			const s = parcelasSummaryMap.get(item.parcela)!;
 			s.totalPropostas += item.totalPropostas || 0;
 			s.totalPago += item.totalPago || 0;
 			s.totalPendente += item.totalPendente || 0;
 		});
-		const parcelasSummary = Array.from(parcelasSummaryMap.entries()).map(([parcela, s]) => ({
-			parcela,
-			totalPropostas: s.totalPropostas,
-			totalPago: s.totalPago,
-			totalPendente: s.totalPendente,
-			percentualAdimplencia: s.totalPropostas > 0 ? (s.totalPago / s.totalPropostas) * 100 : 0,
-		}));
-		const period = `${startDate ? new Date(startDate).toLocaleDateString('pt-BR') : ''} - ${endDate ? new Date(endDate).toLocaleDateString('pt-BR') : ''}`;
+		const parcelasSummary = Array.from(parcelasSummaryMap.entries()).map(
+			([parcela, s]) => ({
+				parcela,
+				totalPropostas: s.totalPropostas,
+				totalPago: s.totalPago,
+				totalPendente: s.totalPendente,
+				percentualAdimplencia:
+					s.totalPropostas > 0
+						? (s.totalPago / s.totalPropostas) * 100
+						: 0,
+			})
+		);
+		const period = `${
+			startDate ? new Date(startDate).toLocaleDateString('pt-BR') : ''
+		} - ${endDate ? new Date(endDate).toLocaleDateString('pt-BR') : ''}`;
 		await exportAdimplenciaPdf({
 			loja: displayLoja,
 			period,
@@ -156,22 +179,37 @@ const Adimplencia: React.FC = () => {
 						</CollapsibleContent>
 					</Collapsible>
 				</div>
-				<Button
-					variant="outline"
-					className="flex items-center gap-2 bg-green-100"
-					onClick={handleExport}
-					disabled={isLoading || !data || data.length === 0}
-				>
-					<Download size={16} />
-					Exportar CSV
-				</Button>
+				<div className="flex gap-4">
+					<Button
+						variant="outline"
+						className="flex items-center gap-2 bg-green-100"
+						onClick={handleExport}
+						disabled={isLoading || !data || data.length === 0}
+					>
+						<Download size={16} />
+						Exportar CSV
+					</Button>
+					<Button
+						variant="outline"
+						className="flex items-center gap-2 bg-purple-200 hover:bg-purple-300"
+						onClick={handleExportPdf}
+						disabled={isLoading || !data || data.length === 0}
+					>
+						<Download size={16} />
+						Exportar PDF
+					</Button>
+				</div>
 			</div>
 			<main className="container mx-auto gap-4 flex flex-col">
 				<AdimplenciaParametersControl
 					startDate={startDate}
-					setStartDate={date => { if (date) setStartDate(date); }}
+					setStartDate={(date) => {
+						if (date) setStartDate(date);
+					}}
 					endDate={endDate}
-					setEndDate={date => { if (date) setEndDate(date); }}
+					setEndDate={(date) => {
+						if (date) setEndDate(date);
+					}}
 					selectedParcelas={selectedParcelas}
 					setSelectedParcelas={setSelectedParcelas}
 					availableParcelas={availableParcelas}

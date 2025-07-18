@@ -1,6 +1,7 @@
-import React, { useMemo, useState, useCallback } from 'react';
+import React, { useMemo, useState, useCallback, useRef } from 'react';
 import { BarChart3, Download, ChevronUp, ChevronDown } from 'lucide-react';
 
+import { useReactToPrint } from 'react-to-print';
 import {
 	Table,
 	TableBody,
@@ -57,6 +58,9 @@ export default function Ranking() {
 		selectedLoja,
 		setSelectedLoja,
 	} = useRanking();
+
+	const contentRef = useRef<HTMLDivElement>(null);
+	const reactToPrintFn = useReactToPrint({ contentRef });
 
 	// Wrapper functions to handle the type conversion
 	const handleStartDateChange = (date: Date | null) => {
@@ -464,11 +468,17 @@ export default function Ranking() {
 	});
 
 	const [open, setOpen] = useState(false);
-	const selectedLojaObj = lojas?.find(l => l.codhda === selectedLoja);
-	const displayLoja = selectedLojaObj ? selectedLojaObj.empresa : 'Todas as Lojas';
+	const selectedLojaObj = lojas?.find((l) => l.codhda === selectedLoja);
+	const displayLoja = selectedLojaObj
+		? selectedLojaObj.empresa
+		: 'Todas as Lojas';
+
+	const handleExportPdf = () => {
+		reactToPrintFn();
+	};
 
 	return (
-		<div className="p-4">
+		<div className="p-4" ref={contentRef}>
 			<div className="mb-6">
 				<div className="flex items-center justify-between mb-2 gap-4 md:flex-row flex-col">
 					<Collapsible open={open} onOpenChange={setOpen}>
@@ -527,14 +537,26 @@ export default function Ranking() {
 							</div>
 						</CollapsibleContent>
 					</Collapsible>
-					<Button
-						variant="outline"
-						className="flex items-center gap-2 bg-green-100"
-						onClick={handleExport}
-					>
-						<Download size={16} />
-						Exportar CSV
-					</Button>
+					<div className="flex gap-4 no-print">
+						<Button
+							variant="outline"
+							className="flex items-center gap-2 bg-green-100"
+							onClick={handleExport}
+							disabled={isLoading || !data || data.length === 0}
+						>
+							<Download size={16} />
+							Exportar CSV
+						</Button>
+						<Button
+							variant="outline"
+							className="flex items-center gap-2 bg-purple-200 hover:bg-purple-300"
+							onClick={handleExportPdf}
+							disabled={isLoading || !data || data.length === 0}
+						>
+							<Download size={16} />
+							Exportar PDF
+						</Button>
+					</div>
 				</div>
 			</div>
 

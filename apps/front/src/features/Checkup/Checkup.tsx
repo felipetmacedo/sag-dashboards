@@ -1,4 +1,4 @@
-import { useMemo, useState, useCallback } from 'react';
+import { useMemo, useState, useCallback, useRef } from 'react';
 import { Download, ChevronUp, ChevronDown, List } from 'lucide-react';
 import {
 	Table,
@@ -12,6 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DatePicker } from '@/components/ui/date-picker';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
+import { useReactToPrint } from 'react-to-print';
 import {
 	ColumnDef,
 	flexRender,
@@ -50,6 +51,11 @@ export default function Checkup() {
 		setSelectedLoja,
 		displayLoja,
 	} = VendasContainer();
+	const contentRef = useRef<HTMLDivElement>(null);
+	const reactToPrintFn = useReactToPrint({ contentRef });
+	const handleExportPdf = useCallback(() => {
+		reactToPrintFn();
+	}, [reactToPrintFn]);
 
 	// Wrapper functions to handle the type conversion
 	const handleStartDateChange = (date: Date | null) => {
@@ -441,7 +447,7 @@ export default function Checkup() {
 	});
 
 	return (
-		<div className="p-4">
+		<div className="p-4" ref={contentRef}>
 			<div className="mb-6">
 				<div className="flex items-center justify-between mb-2 gap-4 md:flex-row flex-col">
 					<Collapsible open={open} onOpenChange={setOpen}>
@@ -500,14 +506,26 @@ export default function Checkup() {
 							</div>
 						</CollapsibleContent>
 					</Collapsible>
-					<Button
-						variant="outline"
-						className="flex items-center gap-2 bg-green-100"
-						onClick={handleExport}
-					>
-						<Download size={16} />
-						Exportar CSV
-					</Button>
+					<div className="flex gap-4 no-print">
+						<Button
+							variant="outline"
+							className="flex items-center gap-2 bg-green-100"
+							onClick={handleExport}
+							disabled={isLoading || !data || data.length === 0}
+						>
+							<Download size={16} />
+							Exportar CSV
+						</Button>
+						<Button
+							variant="outline"
+							className="flex items-center gap-2 bg-purple-200 hover:bg-purple-300"
+							onClick={handleExportPdf}
+							disabled={isLoading || !data || data.length === 0}
+						>
+							<Download size={16} />
+							Exportar PDF
+						</Button>
+					</div>
 				</div>
 			</div>
 
@@ -521,10 +539,12 @@ export default function Checkup() {
 							<label className="text-sm font-medium mb-1 block">
 								Valor
 							</label>
-							<Input 
-								placeholder={'Buscar por qualquer campo'} 
+							<Input
+								placeholder={'Buscar por qualquer campo'}
 								value={searchFilter}
-								onChange={(e) => setSearchFilter(e.target.value)}
+								onChange={(e) =>
+									setSearchFilter(e.target.value)
+								}
 							/>
 						</div>
 
@@ -558,7 +578,9 @@ export default function Checkup() {
 				<CardContent>
 					<div className="flex items-center gap-2">
 						<div className="text-4xl font-bold">{data.length}</div>
-						<div className="text-muted-foreground">Propostas no período</div>
+						<div className="text-muted-foreground">
+							Propostas no período
+						</div>
 					</div>
 				</CardContent>
 			</Card>
