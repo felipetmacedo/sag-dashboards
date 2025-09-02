@@ -1,4 +1,4 @@
-import { useMemo, useState, useCallback, useRef } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 import { Download, ChevronUp, ChevronDown, List } from 'lucide-react';
 import {
 	Table,
@@ -12,7 +12,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DatePicker } from '@/components/ui/date-picker';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
-import { useReactToPrint } from 'react-to-print';
 import {
 	ColumnDef,
 	flexRender,
@@ -31,6 +30,7 @@ import {
 	CollapsibleContent,
 	CollapsibleTrigger,
 } from '@/components/ui/collapsible';
+import { exportUnifiedReportPdf } from '@/utils/unified-report-pdf';
 
 export default function Checkup() {
 	const [open, setOpen] = useState(false);
@@ -51,11 +51,47 @@ export default function Checkup() {
 		setSelectedLoja,
 		displayLoja,
 	} = VendasContainer();
-	const contentRef = useRef<HTMLDivElement>(null);
-	const reactToPrintFn = useReactToPrint({ contentRef });
 	const handleExportPdf = useCallback(() => {
-		reactToPrintFn();
-	}, [reactToPrintFn]);
+		const loja = displayLoja;
+		const period = `${format(startDate, 'dd/MM/yyyy')} a ${format(endDate, 'dd/MM/yyyy')}`;
+
+		const columns = [
+			{ header: 'Proposta', field: 'proposta', width: 28 },
+			{ header: 'Status', field: 'status', width: 30 },
+			{ header: 'Nome_Plano', field: 'nomePlano', width: 38 },
+			{ header: 'CPF Cliente', field: 'cpfCliente', width: 28 },
+			{ header: 'Data Bordero', field: 'dataBordero', width: 26 },
+			{ header: 'CPF Vendedor', field: 'cpfVendedor', width: 28 },
+		];
+
+		const rows = data.map((r) => {
+			const p = r as Proposta;
+			return {
+				proposta: `${p.NUM_PROPOSTA ?? '-'} - ${p.DIG_PROPOSTA ?? '-'}`,
+				status: p.STATUS ?? '-',
+				nomePlano: p.NOME_PLANO ?? '-',
+				cpfCliente: p.CPFCNPCONSORCIADO ?? '-',
+				dataBordero: p.DT_BORDERO ?? '-',
+				cpfVendedor: p.CPF_VENDEDOR ?? '-',
+			};
+		});
+
+		exportUnifiedReportPdf(
+			{
+				loja,
+				period,
+				sections: [
+					{
+						title: 'Todas Propostas',
+						subtitle: period,
+						columns,
+						rows,
+					},
+				],
+			},
+			`relatorio_checkup_${format(startDate, 'dd-MM-yyyy')}_a_${format(endDate, 'dd-MM-yyyy')}.pdf`
+		);
+	}, [data, displayLoja, endDate, startDate]);
 
 	// Wrapper functions to handle the type conversion
 	const handleStartDateChange = (date: Date | null) => {
@@ -447,7 +483,7 @@ export default function Checkup() {
 	});
 
 	return (
-		<div className="p-4" ref={contentRef}>
+		<div className="p-4">
 			<div className="mb-6">
 				<div className="flex items-center justify-between mb-2 gap-4 md:flex-row flex-col">
 					<Collapsible open={open} onOpenChange={setOpen}>

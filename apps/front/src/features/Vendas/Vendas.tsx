@@ -1,4 +1,4 @@
-import { useMemo, useState, useCallback, useRef } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 import { Download, ChevronUp, ChevronDown, Banknote } from 'lucide-react';
 import {
 	Table,
@@ -20,7 +20,6 @@ import {
 	SortingState,
 	getSortedRowModel,
 } from '@tanstack/react-table';
-import { useReactToPrint } from 'react-to-print';
 import VendasContainer, { RankingRow } from './Vendas.container';
 import { exportToCsv } from '@/utils/export-to-csv';
 import { Input } from '@/components/ui/input';
@@ -29,6 +28,7 @@ import {
 	CollapsibleContent,
 	CollapsibleTrigger,
 } from '@/components/ui/collapsible';
+import { exportUnifiedReportPdf } from '@/utils/unified-report-pdf';
 
 export default function Vendas() {
 	const [open, setOpen] = useState(false);
@@ -50,11 +50,43 @@ export default function Vendas() {
 		setSelectedLoja,
 		displayLoja,
 	} = VendasContainer();
-	const contentRef = useRef<HTMLDivElement>(null);
-	const reactToPrintFn = useReactToPrint({ contentRef });
 	const handleExportPdf = useCallback(() => {
-		reactToPrintFn();
-	}, [reactToPrintFn]);
+		const loja = displayLoja;
+		const period = `${format(startDate, 'dd/MM/yyyy')} a ${format(endDate, 'dd/MM/yyyy')}`;
+
+		const columns = [
+			{ header: rankingTypeLabels[rankingType], field: 'key' },
+			{ header: 'QTD', field: 'qtd', align: 'right' as const },
+			{ header: '%', field: 'percent', align: 'right' as const },
+			{ header: 'Valor Total', field: 'valorTotal', align: 'right' as const },
+		];
+
+		const rows = data.map((r) => ({
+			key: r.key ?? 'Não informado',
+			qtd: r.qtd,
+			percent: `${r.percent.toFixed(2)}%`,
+			valorTotal:
+				r.valorTotal !== undefined
+					? r.valorTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+					: '-',
+		}));
+
+		exportUnifiedReportPdf(
+			{
+				loja,
+				period,
+				sections: [
+					{
+						title: 'Qualidade Vendas por Vendedor',
+						subtitle: period,
+						columns,
+						rows,
+					},
+				],
+			},
+			`relatorio_vendas_${format(startDate, 'dd-MM-yyyy')}_a_${format(endDate, 'dd-MM-yyyy')}.pdf`
+		);
+	}, [data, displayLoja, endDate, rankingType, rankingTypeLabels, startDate]);
 
 	// Wrapper functions to handle the type conversion
 	const handleStartDateChange = (date: Date | null) => {
@@ -317,7 +349,7 @@ export default function Vendas() {
 	});
 
 	return (
-		<div className="p-4" ref={contentRef}>
+		<div className="p-4">
 			<div className="mb-6">
 				<div className="flex items-center justify-between mb-2 gap-4 md:flex-row flex-col">
 					<Collapsible open={open} onOpenChange={setOpen}>

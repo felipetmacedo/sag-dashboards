@@ -18,8 +18,8 @@ export interface AdimplenciaRow {
 export default function useAdimplenciaContainer() {
 	// Default to current month
 	const currentDate = new Date();
-	const [startDate, setStartDate] = useState<Date>(startOfMonth(currentDate));
-	const [endDate, setEndDate] = useState<Date>(endOfMonth(currentDate));
+	const [startDate, setStartDate] = useState<Date>(new Date(currentDate.getFullYear(), currentDate.getMonth() - 2, 1)); // pegar primerio dia de julho (que foi 3 meses atras)
+	const [endDate, setEndDate] = useState<Date>(new Date(currentDate.getFullYear(), currentDate.getMonth() - 2, 31)); // pegar ultimo dia de julho (que foi 3 meses atras)
 	const lojas = useLojasStore((state) => state.lojas);
 	const [selectedLoja, setSelectedLoja] = useState<string | null>(null);
 	const [selectedParcelas, setSelectedParcelas] = useState<string[]>([]);

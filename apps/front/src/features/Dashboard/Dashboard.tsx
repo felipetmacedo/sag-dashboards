@@ -1,7 +1,6 @@
 'use client';
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import useDashboardContainer from './Dashboard.container';
-import { useReactToPrint } from 'react-to-print';
 import { Download } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -22,6 +21,7 @@ import {
 import { LayoutDashboard } from 'lucide-react';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
+import { exportDashboardPdf } from '@/utils/dashboard-pdf';
 
 export default function DashboardPage() {
 	const {
@@ -44,14 +44,23 @@ export default function DashboardPage() {
 
 	const [open, setOpen] = useState(false);
 	const [exporting, setExporting] = useState(false);
-	const contentRef = useRef<HTMLDivElement>(null);
-	const reactToPrintFn = useReactToPrint({ contentRef });
 
 	const handleExportPdf = async () => {
 		try {
 			setExporting(true);
-
-			reactToPrintFn();
+			// Build PDF data
+			const period = `${format(startDate, 'dd/MM/yyyy')} - ${format(endDate, 'dd/MM/yyyy')}`;
+			await exportDashboardPdf({
+				loja: displayLoja,
+				period,
+				totalPropostas,
+				totalFaturamento,
+				topVendors,
+				topMotors,
+				topPlanos: productPie,
+				tipoPropostaPie,
+				productPie,
+			});
 		} catch (err) {
 			console.error(err);
 			toast.error('Erro ao exportar PDF');
@@ -80,7 +89,7 @@ export default function DashboardPage() {
 	const endDateString = endDate ? endDate.toISOString() : null;
 
 	return (
-		<div className="flex flex-col gap-8 p-8 w-full min-h-screen print-content" ref={contentRef}>
+		<div className="flex flex-col gap-8 p-8 w-full min-h-screen print-content">
 			<div className="flex items-center justify-between mb-2 gap-4 md:flex-row flex-col">
 				<Collapsible open={open} onOpenChange={setOpen}>
 					<div className="flex items-center gap-2 relative">
@@ -371,7 +380,7 @@ export default function DashboardPage() {
 										>
 											{tipoPropostaPie.map(
 												(
-													entry: {
+													_entry: {
 														tipo: string;
 														value: number;
 													},
@@ -439,12 +448,12 @@ export default function DashboardPage() {
 											cx="40%"
 											cy="50%"
 											outerRadius={80}
-											label={({ name, percent }) =>
+											label={({ percent }) =>
 												`${(percent * 100).toFixed(0)}%`
 											}
 										>
 											{productPie.map(
-												(entry: any, idx: number) => (
+												(_entry: any, idx: number) => (
 													<Cell
 														key={`prod-cell-${idx}`}
 														fill={

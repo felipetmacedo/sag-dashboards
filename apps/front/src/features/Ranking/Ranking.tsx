@@ -1,7 +1,6 @@
-import React, { useMemo, useState, useCallback, useRef } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 import { BarChart3, Download, ChevronUp, ChevronDown } from 'lucide-react';
 
-import { useReactToPrint } from 'react-to-print';
 import {
 	Table,
 	TableBody,
@@ -31,6 +30,7 @@ import {
 } from '@tanstack/react-table';
 
 import useRanking, { RankingType, RankingRow } from './Ranking.container';
+import { exportUnifiedReportPdf } from '@/utils/unified-report-pdf';
 import { exportToCsv } from '@/utils/export-to-csv';
 import { Input } from '@/components/ui/input';
 import {
@@ -59,8 +59,7 @@ export default function Ranking() {
 		setSelectedLoja,
 	} = useRanking();
 
-	const contentRef = useRef<HTMLDivElement>(null);
-	const reactToPrintFn = useReactToPrint({ contentRef });
+
 
 	// Wrapper functions to handle the type conversion
 	const handleStartDateChange = (date: Date | null) => {
@@ -474,11 +473,42 @@ export default function Ranking() {
 		: 'Todas as Lojas';
 
 	const handleExportPdf = () => {
-		reactToPrintFn();
+		const loja = displayLoja;
+		const period = `${format(startDate, 'dd/MM/yyyy')} a ${format(endDate, 'dd/MM/yyyy')}`;
+
+		const columns = [
+			{ header: rankingTypeLabels[rankingType], field: 'key' },
+			{ header: 'QTD', field: 'qtd', align: 'right' as const },
+			{ header: '%', field: 'percent', align: 'right' as const },
+			{ header: 'Valor Total', field: 'valorTotal', align: 'right' as const },
+		];
+
+		const rows = data.map((r) => ({
+			key: r.key ?? 'Não informado',
+			qtd: r.qtd,
+			percent: `${r.percent.toFixed(2)}%`,
+			valorTotal: formatCurrency(r.valorTotal ?? 0),
+		}));
+
+		exportUnifiedReportPdf(
+			{
+				loja,
+				period,
+				sections: [
+					{
+						title: `Ranking por ${rankingTypeLabels[rankingType]}`,
+						subtitle: period,
+						columns,
+						rows,
+					},
+				],
+			},
+			`relatorio_ranking_${format(startDate, 'dd-MM-yyyy')}_a_${format(endDate, 'dd-MM-yyyy')}.pdf`
+		);
 	};
 
 	return (
-		<div className="p-4" ref={contentRef}>
+		<div className="p-4">
 			<div className="mb-6">
 				<div className="flex items-center justify-between mb-2 gap-4 md:flex-row flex-col">
 					<Collapsible open={open} onOpenChange={setOpen}>
